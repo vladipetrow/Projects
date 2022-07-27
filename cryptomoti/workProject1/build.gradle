@@ -1,0 +1,41 @@
+plugins {
+	id 'org.springframework.boot' version '2.7.0'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	testImplementation 'junit:junit:4.13.2'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
+	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'
+	testImplementation 'org.mockito:mockito-core:4.5.1'
+	implementation 'org.springframework:spring-jdbc:5.3.20'
+	implementation 'mysql:mysql-connector-java:8.0.29'
+	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
+	runtimeOnly group: 'com.google.firebase', name: 'firebase-admin', version: '8.1.0'
+	implementation 'com.google.firebase:firebase-admin:8.2.0'
+
+
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	runtimeOnly 'mysql:mysql-connector-java'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+
+	implementation "jakarta.xml.bind:jakarta.xml.bind-api:4.0.0"
+	implementation "org.glassfish.jaxb:jaxb-runtime:3.0.2"
+	implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.0-b170201.1204'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
