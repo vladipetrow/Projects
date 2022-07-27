@@ -1,0 +1,15 @@
+Functionalities of the game:
+
+The game starts and the board is generated. By default the board is 9x9 and has 10 explosives.
+It is not possible to generate 2 explosives at the same position.
+The player then starts playing moves by entering three parameters into the console, which are interpreted as {row column action}.
+Example: 0 1 r Row 0, Column 1, reveal what is below this position.
+Example: 2 1 b Row 2, column 1, mark the position as an plosive.
+If the player uncovers an explosive, the game ends with a loss.
+If the player reveals a position that does not have explosives in the 8 positions surrounding it, the number 0 is written. Unlike in the real version of Minesweeper, 
+it is not expected to reveal all positions until those with numbers are reached.
+If the player reveals a position that has explosives next to it, a number is written on the position, how many explosives are in the nearby 8 positions.
+Example: In the following exposed example, the center position has 2 explosives in the surrounding 8 positions.
+0 1 X
+1 2 1
+1 X 1
