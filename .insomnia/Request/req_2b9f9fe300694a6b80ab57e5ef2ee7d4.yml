@@ -1,0 +1,30 @@
+_id: req_2b9f9fe300694a6b80ab57e5ef2ee7d4
+type: Request
+parentId: fld_b05bb1041c354b87acb053e698877ff2
+modified: 1658771293070
+created: 1658770600854
+url: localhost:8080/user/login
+name: userLogin
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"email" : "georgi@abv.bg",
+    	"password": "123456"
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+    id: pair_d08e88b1ed83480ba86d83e0d869d689
+authentication: {}
+metaSortKey: -1658770600854
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global
