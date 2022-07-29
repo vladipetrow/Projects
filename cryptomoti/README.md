@@ -1,9 +1,8 @@
 ## How to start the app:
 
-- Go to intelij and open workProject1 then start WorkProject1.Application.
-- Then go to WorkProject1Application and start the server.
+- Go to cryptomoti and open it with Intelij then open workProject1 then start the server.
 - Go to imot4e-fe and open it with VS code 
-- write in terminal cd imot4e-fe, npm install --force
+- Write in terminal cd imot4e-fe, npm install --force
 and then npm start.
 
 - You are ready!
