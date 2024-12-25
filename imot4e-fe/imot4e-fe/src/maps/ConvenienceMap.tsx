@@ -1,28 +1,31 @@
 import { Box, List, ListItem, ListItemText, ListSubheader, Switch } from "@mui/material";
-import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api';
+import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api";
 import { useCallback, useState } from "react";
 
 const containerStyle = {
-  width: "55em",
-  height: "42em"
+  width: "100%",
+  height: "500px",
 };
 
 const center = {
   lat: 42.67500315541814,
-  lng: 23.33011102986799
+  lng: 23.33011102986799,
+};
+
+// Example marker categories
+const markerCategories = {
+  transport: [{ lat: 42.67500315541814, lng: 23.33011102986799 }],
+  nujdi: [{ lat: 42.678, lng: 23.335 }],
+  sport: [{ lat: 42.672, lng: 23.326 }],
+  socialLife: [{ lat: 42.673, lng: 23.322 }],
 };
 
 const ConvenienceMap = () => {
-  const [map, setMap] = useState(null);
-  const [checked, setChecked] = useState(['transport', 'nujdi', 'sport', 'social-life']);
-
-  const onUnmount = useCallback(function callback(map: any) {
-    setMap(null)
-  }, []);
+  const [checked, setChecked] = useState(["transport", "nujdi", "sport", "socialLife"]);
 
   const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyDiZEjj-eCVBTsLYI-G3f2lLwNrYiOt-jY"
+    id: "google-map-script",
+    googleMapsApiKey: process.env.REACT_APP_API_KEY || "",
   });
 
   const handleToggle = (value: string) => () => {
@@ -37,86 +40,53 @@ const ConvenienceMap = () => {
 
     setChecked(newChecked);
   };
+
   return (
     <Box
       sx={{
-        display: 'flex',
-        gap: '1em',
+        display: "flex",
+        gap: "1em",
         p: 1,
         m: 1,
-        bgcolor: 'background.paper',
+        bgcolor: "background.paper",
         borderRadius: 1,
       }}
     >
-      {isLoaded ?
+      {isLoaded ? (
         <GoogleMap
-          mapTypeId="hybrid"
           mapContainerStyle={containerStyle}
           center={center}
-          zoom={18}
-          // onLoad={onLoad}
-          onUnmount={onUnmount}
+          zoom={14}
         >
-          <Marker position={center} />
-        </GoogleMap> : <></>}
-      {/* <iframe
-        title="map"
-        width="900"
-        height="650"
-        style={{ border: 0 }}
-        loading="lazy"
-        allowFullScreen
-        referrerPolicy="no-referrer-when-downgrade"
-        src="https://www.google.com/maps/embed/v1/place?key=API_KEY&q=Lozenets, 1421 Sofia">
-      </iframe> */}
+          {checked.flatMap((category) =>
+            markerCategories[category].map((location, index) => (
+              <Marker key={`${category}-${index}`} position={location} />
+            ))
+          )}
+        </GoogleMap>
+      ) : (
+        <div>Loading map...</div>
+      )}
       <List
-        sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+        sx={{ width: "100%", maxWidth: 360, bgcolor: "background.paper" }}
         subheader={<ListSubheader>Удобства в района</ListSubheader>}
       >
-        <ListItem>
-          <ListItemText id="switch-list-label-transport" primary="Транспорт" />
-          <Switch
-            edge="end"
-            onChange={handleToggle('transport')}
-            checked={checked.indexOf('transport') !== -1}
-            inputProps={{
-              'aria-labelledby': 'switch-list-label-transport',
-            }}
-          />
-        </ListItem>
-        <ListItem>
-          <ListItemText id="switch-list-label-nujdi" primary="Всекидневни нужди" />
-          <Switch
-            edge="end"
-            onChange={handleToggle('nujdi')}
-            checked={checked.indexOf('nujdi') !== -1}
-            inputProps={{
-              'aria-labelledby': 'switch-list-label-nujdi',
-            }}
-          />
-        </ListItem>
-        <ListItem>
-          <ListItemText id="switch-list-label-sport" primary="Спорт" />
-          <Switch
-            edge="end"
-            onChange={handleToggle('sport')}
-            checked={checked.indexOf('sport') !== -1}
-            inputProps={{
-              'aria-labelledby': 'switch-list-label-sport',
-            }}
-          />
-        </ListItem>
-        <ListItem>
-          <ListItemText id="switch-list-label-social-life" primary="Социален живот" />
-          <Switch
-            edge="end"
-            onChange={handleToggle('social-life')}
-            checked={checked.indexOf('social-life') !== -1}
-            inputProps={{
-              'aria-labelledby': 'switch-list-label-social-life',
-            }}
-          />
-        </ListItem>
+        {Object.keys(markerCategories).map((category) => (
+          <ListItem key={category}>
+            <ListItemText
+              id={`switch-list-label-${category}`}
+              primary={category}
+            />
+            <Switch
+              edge="end"
+              onChange={handleToggle(category)}
+              checked={checked.includes(category)}
+              inputProps={{
+                "aria-labelledby": `switch-list-label-${category}`,
+              }}
+            />
+          </ListItem>
+        ))}
       </List>
     </Box>
   );

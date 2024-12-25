@@ -6,6 +6,7 @@
       "dom.iterable",
       "esnext"
     ],
+    "types": ["@types/node", "@types/react", "@types/react-dom"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -21,6 +22,7 @@
     "jsx": "react-jsx"
   },
   "include": [
+    ["src/**/*", "src/global.d.ts"],
     "src"
   ]
 }
