@@ -1,9 +1,4 @@
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
-import { Menu, MenuItem } from "@mui/material";
+import { AppBar, Box, Toolbar, Typography, Button, Menu, MenuItem } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AddIcon from "@mui/icons-material/Add";
 import { useState } from "react";
@@ -11,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 const LoggedInNavbar = () => {
-  const { logout } = useAuth(); 
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -37,54 +32,44 @@ const LoggedInNavbar = () => {
           >
             CryptoMoti
           </Typography>
-
           {/* Абонаменти Dropdown */}
           <Button
-            id="demo-customized-button"
-            aria-controls={open ? "demo-customized-menu" : undefined}
+            aria-controls={open ? "menu-abonamenti" : undefined}
             aria-haspopup="true"
             aria-expanded={open ? "true" : undefined}
-            variant="text"
+            onClick={handleMenuClick}
             color="inherit"
             endIcon={<KeyboardArrowDownIcon />}
-            onClick={handleMenuClick}
           >
             Абонаменти
           </Button>
           <Menu
-            id="demo-customized-menu"
+            id="menu-abonamenti"
             anchorEl={anchorEl}
             open={open}
             onClose={() => setAnchorEl(null)}
-            MenuListProps={{
-              "aria-labelledby": "demo-customized-button",
-            }}
           >
-            <MenuItem
-              onClick={() => handleMenuClose("/subscription/agency")}
-              disableRipple
-            >
+            <MenuItem onClick={() => handleMenuClose("/subscription/agency")}>
               Купи абонамент
             </MenuItem>
           </Menu>
-
           {/* Създай обява Button */}
           <Button
             startIcon={<AddIcon />}
             variant="outlined"
             color="inherit"
             sx={{
-              textTransform: "none", // Same as the original style
-              borderWidth: 1, // Slightly thicker border
+              textTransform: "none",
+              borderWidth: 1,
               "&:hover": {
-                borderWidth: 2, // Consistent border width on hover
+                borderWidth: 2,
               },
             }}
             onClick={() => navigate("/create-ad")}
           >
             Създай обява
           </Button>
-
+          {/* Logout */}
           <Button color="inherit" onClick={logout}>
             Изход
           </Button>
@@ -95,3 +80,4 @@ const LoggedInNavbar = () => {
 };
 
 export default LoggedInNavbar;
+

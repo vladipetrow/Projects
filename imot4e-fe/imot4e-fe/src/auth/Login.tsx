@@ -1,13 +1,13 @@
 import { Box, Button, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "./AuthContext"; // Import the custom AuthContext hook
+import { useAuth } from "../auth/AuthContext";
 
 const Login = () => {
-  const { login } = useAuth(); // Access the login function
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
@@ -21,8 +21,8 @@ const Login = () => {
 
       if (!response.ok) throw new Error("Invalid login credentials");
 
-      login(); // Notify the AuthProvider of successful login
-      navigate("/"); // Redirect to homepage
+      login(); // Update authentication state
+      navigate("/",{ replace: true }); // Redirect to homepage
     } catch (err) {
       setError("Login failed. Please check your credentials.");
     }
@@ -36,9 +36,7 @@ const Login = () => {
         alignItems: "center",
         justifyContent: "flex-start",
         minHeight: "100vh",
-        bgcolor: "background.paper",
-        pt: 8, // Padding from the top
-        px: 3,
+        pt: 8,
       }}
     >
       <Box
@@ -55,12 +53,7 @@ const Login = () => {
           Вход
         </Typography>
         {error && (
-          <Typography
-            color="error"
-            variant="body2"
-            align="center"
-            sx={{ mb: 2 }}
-          >
+          <Typography color="error" variant="body2" align="center" sx={{ mb: 2 }}>
             {error}
           </Typography>
         )}
@@ -83,7 +76,6 @@ const Login = () => {
         />
         <Button
           variant="contained"
-          color="primary"
           fullWidth
           sx={{ mt: 2 }}
           onClick={handleSubmit}
@@ -95,13 +87,19 @@ const Login = () => {
             variant="body2"
             component="a"
             href="/register"
-            sx={{
-              textDecoration: "none",
-              color: "primary.main",
-              "&:hover": { textDecoration: "underline" },
-            }}
+            sx={{ textDecoration: "none", color: "primary.main", "&:hover": { textDecoration: "underline" } }}
           >
             Регистрирай се
+          </Typography>
+        </Box>
+        <Box sx={{ mt: 2, textAlign: "center" }}>
+          <Typography
+            variant="body2"
+            component="a"
+            href="/password-reset"
+            sx={{ textDecoration: "none", color: "primary.main", "&:hover": { textDecoration: "underline" } }}
+          >
+            Забравена парола?
           </Typography>
         </Box>
       </Box>
