@@ -18,6 +18,7 @@ public class PostService {
     public PostService(PostRepository repository) {
         this.repository = repository;
     }
+
     public Post createPost(String location, int price, int area,
                            String description, int user_id, int agency_id, ApartmentType type) {
         if(price < 0){

@@ -3,6 +3,7 @@ package com.example.workproject1.repositories.mysql;
 import com.example.workproject1.repositories.AgencyRepository;
 import com.example.workproject1.repositories.models.AgencyDAO;
 import com.example.workproject1.repositories.models.UserDAO;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -15,6 +16,7 @@ import java.sql.Statement;
 import java.util.List;
 import java.util.Objects;
 import static com.example.workproject1.repositories.mysql.MySQLAgencyRepository.Queries.*;
+import static com.example.workproject1.repositories.mysql.MySQLUserRepository.Queries.GET_EMAIL;
 
 public class MySQLAgencyRepository implements AgencyRepository {
 
@@ -56,8 +58,17 @@ public class MySQLAgencyRepository implements AgencyRepository {
 
     @Override
     public AgencyDAO getAgencyByEmail(String email) {
-        return jdbc.queryForObject(GET_AGENCY_BY_EMAIL,
-                (rs, rowNum) -> fromResultSet(rs), email);
+        try {
+            return jdbc.queryForObject(GET_AGENCY_BY_EMAIL,
+                    (rs, rowNum) -> fromResultSet(rs), email);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public String getEmail(int id) {
+        return jdbc.queryForObject(GET_EMAIL, String.class, id);
     }
 
     @Override
@@ -78,6 +89,10 @@ public class MySQLAgencyRepository implements AgencyRepository {
             jdbc.update(DELETE_AGENCY, id);
             return null;
         });
+    }
+
+    public void updatePassword(int agencyId, String password) {
+        jdbc.update("UPDATE agencies SET passwordHash = ? WHERE id = ?", password, agencyId);
     }
 
     private AgencyDAO fromResultSet(ResultSet rs) throws SQLException {
@@ -110,6 +125,8 @@ public class MySQLAgencyRepository implements AgencyRepository {
                 "WHERE p.email = ? AND p.passwordHash = ?";
         public static final String INSERT_AGENCY =
                 "INSERT INTO Agency (name_of_agency, email, passwordHash, salt, phone_number, address) VALUES (?, ?, ?, ?, ?, ?)";
+        public static final String UPDATE_PASSWORD_BY_EMAIL = "UPDATE users SET passwordHash = ? WHERE email = ?";
+        public static final String GET_EMAIL = "SELECT email FROM Agency WHERE id = ?";
 
         public static final String GET_AGENCY = "" +
                 "SELECT \n" +

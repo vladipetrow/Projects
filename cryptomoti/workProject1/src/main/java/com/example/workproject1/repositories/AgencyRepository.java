@@ -8,6 +8,8 @@ public interface AgencyRepository {
     AgencyDAO getAgencyByEmailAndPassword(String email, String password);
     AgencyDAO getAgencyByEmail(String email);
     AgencyDAO getAgency(int id);
+    String getEmail(int id);
     List<AgencyDAO> listAgency(int page, int pageSize);
     void deleteAgency(int id);
+    void updatePassword(int userId, String password);
 }

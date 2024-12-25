@@ -6,20 +6,21 @@ import com.example.workproject1.coreServices.ServiceExeptions.MinimumLengthOfPas
 import com.example.workproject1.coreServices.ServiceExeptions.UserNotExist;
 import com.example.workproject1.coreServices.models.User;
 import com.example.workproject1.repositories.UserRepository;
+import com.example.workproject1.security.PasswordUtil;
+import com.google.api.client.util.Value;
 import org.apache.tomcat.util.json.JSONParser;
 import org.apache.tomcat.util.json.ParseException;
 import org.springframework.dao.DataAccessException;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class UserService {
     private final UserRepository repository;
-    private final String PEPPER = "7778fcc9c652f35d5d4463bf1d1c94abcd";
+
+    @Value("${passwordPeperUser}")
+    private static String PEPPER;
 
     private final String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
             + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
@@ -41,7 +42,7 @@ public class UserService {
             throw new MinimumLengthOfPasswordIs6();
         }
         String salt = UUID.randomUUID().toString();
-        String hash = sha256(salt + password + PEPPER);
+        String hash = PasswordUtil.sha256(salt + password + PEPPER);
         try {
             return Mappers.fromUserDAO(
                     repository.createUser(first_name, last_name, email, hash, salt));
@@ -51,12 +52,17 @@ public class UserService {
     }
 
     public int authorizeUser(String email, String password) {
-        User user;
-        user = Mappers.fromUserDAO(repository.getUserByEmail(email));
-        String hash = sha256(user.salt + password + PEPPER);
-
-        if (!hash.equals(user.passwordHash))
+        User user = Mappers.fromUserDAO(repository.getUserByEmail(email));
+        if (user == null) {
             throw new UserNotExist();
+        }
+
+        String hashedPassword = PasswordUtil.sha256(user.salt + password + PEPPER);
+
+        if (!hashedPassword.equals(user.passwordHash)) {
+            throw new UserNotExist();
+        }
+
         return user.id;
     }
 
@@ -104,26 +110,5 @@ public class UserService {
 
     public void deleteUser(int id) {
         repository.deleteUser(id);
-    }
-
-    private static String sha256(String originalString) {
-        MessageDigest digest;
-        try {
-            digest = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-        byte[] hash = digest.digest(originalString.getBytes(StandardCharsets.UTF_8));
-
-        StringBuilder hexString = new StringBuilder(2 * hash.length);
-        for (byte b : hash) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
-            hexString.append(hex);
-        }
-
-        return hexString.toString();
     }
 }

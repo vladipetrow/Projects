@@ -2,6 +2,7 @@ package com.example.workproject1.repositories.mysql;
 
 import com.example.workproject1.repositories.UserRepository;
 import com.example.workproject1.repositories.models.UserDAO;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -54,9 +55,14 @@ public class MySQLUserRepository implements UserRepository {
     }
     @Override
     public UserDAO getUserByEmail(String email) {
-        return jdbc.queryForObject(GET_USER_BY_EMAIL,
-                (rs, rowNum) -> fromResultSet(rs), email);
+        try {
+            return jdbc.queryForObject(GET_USER_BY_EMAIL,
+                    (rs, rowNum) -> fromResultSet(rs), email);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
+
 
     @Override
     public String getEmail(int id) {
@@ -78,6 +84,11 @@ public class MySQLUserRepository implements UserRepository {
             jdbc.update(DELETE_USERS, id);
             return null;
         });
+    }
+
+    @Override
+    public void updatePassword(int userId, String password) {
+        jdbc.update("UPDATE users SET passwordHash = ? WHERE id = ?", password, userId);
     }
 
     private UserDAO fromResultSet(ResultSet rs) throws SQLException {
@@ -110,6 +121,8 @@ public class MySQLUserRepository implements UserRepository {
         public static final String INSERT_USER =
                 "INSERT INTO Users (first_name, last_name, email, passwordHash, salt) VALUES (?, ?, ?, ?, ?)";
         public static final String GET_EMAIL = "SELECT email FROM users WHERE id = ?";
+        public static final String UPDATE_PASSWORD_BY_EMAIL = "UPDATE users SET passwordHash = ? WHERE email = ?";
+
 
         public static final String GET_USER = "" +
                 "SELECT \n" +
