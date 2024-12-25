@@ -22,7 +22,7 @@ import java.util.List;
 public class MailgunService {
     private static final String DOMAIN = "sandbox5ecb525ad76f413da37987ee9792bec2.mailgun.org";
 
-    @Value("${apiKey}")
+    @Value("${mailgunApiKey}")
     private static String apiKey;
     public static void sendMail(String subject, String body, String recipients) {
         try {
@@ -38,7 +38,7 @@ public class MailgunService {
     }
 
     private static String postMessage(String URL, List<NameValuePair> form) throws Exception {
-        if (form == null || URL == null || URL.trim().length() == 0) {
+        if (form == null || URL == null || URL.trim().isEmpty()) {
             return "";
         }
 
@@ -54,6 +54,7 @@ public class MailgunService {
             stringBuilder.append(getBody(response.getEntity().getContent()));
             StatusLine statusLine = response.getStatusLine();
             int statusCode = statusLine.getStatusCode();
+
             if (statusCode == HttpStatus.SC_OK) {
                 System.out.println("post mailgun messages ok:" + URL);
             } else {

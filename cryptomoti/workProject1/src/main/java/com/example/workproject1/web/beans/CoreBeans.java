@@ -21,9 +21,4 @@ public class CoreBeans {
         return new AgencyService(repository);
     }
 
-    @Bean
-    public SubscriptionService subscriptionService(SubscriptionRepository repository) {
-        return new SubscriptionService(repository);
-    }
-
 }

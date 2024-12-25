@@ -34,6 +34,10 @@ dependencies {
 	implementation "jakarta.xml.bind:jakarta.xml.bind-api:4.0.0"
 	implementation "org.glassfish.jaxb:jaxb-runtime:3.0.2"
 	implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.0-b170201.1204'
+
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'org.springframework.boot:spring-boot-starter'
 }
 
 tasks.named('test') {
