@@ -1,5 +1,6 @@
 package com.example.workproject1.repositories.mysql;
 
+import com.example.workproject1.coreServices.models.SubscriptionStatus;
 import com.example.workproject1.repositories.SubscriptionRepository;
 import com.example.workproject1.repositories.models.AgencyDAO;
 import com.example.workproject1.repositories.models.SubscriptionDAO;
@@ -10,7 +11,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.sql.*;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Objects;
 
@@ -25,43 +25,36 @@ public class MySQLSubscriptionRepository implements SubscriptionRepository {
         this.jdbc = jdbc;
     }
 
-    public SubscriptionDAO createSubscription(int user_id, int agency_id, Timestamp expires_at) {
-
+    public SubscriptionDAO createSubscription(int user_id, int agency_id, Timestamp expires_at, String invoice_id) {
         return txTemplate.execute(status -> {
             KeyHolder keyHolder = new GeneratedKeyHolder();
 
-            Timestamp timestamp = expires_at;
-
-            Calendar expiration = Calendar.getInstance();
-
-            expiration.setTime(timestamp);
-
-            expiration.add(Calendar.DAY_OF_WEEK, 30);
-
-            timestamp.setTime(expiration.getTime().getTime());
-
-            if(user_id != 0) {
+            if (user_id != 0) {
                 jdbc.update(conn -> {
                     PreparedStatement ps = conn.prepareStatement(
                             INSERT_SUBSCRIPTION, Statement.RETURN_GENERATED_KEYS);
                     ps.setObject(1, user_id);
                     ps.setObject(2, null);
                     ps.setTimestamp(3, expires_at);
+                    ps.setString(4, invoice_id); // Add invoice ID
+                    ps.setString(5, SubscriptionStatus.PENDING.name()); // Initial status
                     return ps;
                 }, keyHolder);
-            }else {
+            } else {
                 jdbc.update(conn -> {
                     PreparedStatement ps = conn.prepareStatement(
                             INSERT_SUBSCRIPTION, Statement.RETURN_GENERATED_KEYS);
                     ps.setObject(1, null);
                     ps.setObject(2, agency_id);
                     ps.setTimestamp(3, expires_at);
+                    ps.setString(4, invoice_id); // Add invoice ID
+                    ps.setString(5, SubscriptionStatus.PENDING.name()); // Initial status
                     return ps;
                 }, keyHolder);
             }
 
             int id = Objects.requireNonNull(keyHolder.getKey()).intValue();
-            return new SubscriptionDAO(id, user_id, agency_id, timestamp);
+            return new SubscriptionDAO(id, user_id, agency_id, expires_at, invoice_id, SubscriptionStatus.PENDING.name());
         });
     }
 
@@ -96,6 +89,22 @@ public class MySQLSubscriptionRepository implements SubscriptionRepository {
             return null;
         });
     }
+
+    public void updateSubscriptionStatus(String invoice_id, SubscriptionStatus status) {
+        jdbc.update(
+                "UPDATE SUBSCRIPTIONS SET status = ? WHERE invoice_id = ?",
+                status.name(), invoice_id
+        );
+    }
+
+    public SubscriptionDAO findByInvoiceId(String invoice_id) {
+        return jdbc.queryForObject(
+                "SELECT * FROM SUBSCRIPTIONS WHERE invoice_id = ?",
+                (rs, rowNum) -> fromResultSet(rs),
+                invoice_id
+        );
+    }
+
     private AgencyDAO fromResultSetAgency(ResultSet rs) throws SQLException {
         return new AgencyDAO(
                 rs.getInt("id"),
@@ -118,9 +127,12 @@ public class MySQLSubscriptionRepository implements SubscriptionRepository {
                 rs.getInt("id"),
                 rs.getInt("user_id"),
                 rs.getInt("agency_id"),
-                rs.getTimestamp("expires_at")
+                rs.getTimestamp("expires_at"),
+                rs.getString("invoice_id"), // Add invoice ID
+                rs.getString("status") // Add status
         );
     }
+
     private Timestamp fromResultSetTime(ResultSet rs) throws SQLException {
         return rs.getTimestamp("expires_at");
     }
@@ -131,7 +143,7 @@ public class MySQLSubscriptionRepository implements SubscriptionRepository {
         public static final String GET_AGENCY_EXPIRATION_DATE = ""+
                 "SELECT expires_at FROM subscriptions sb WHERE sb.agency_id = ?";
         public static final String INSERT_SUBSCRIPTION =
-                "INSERT INTO SUBSCRIPTIONS (user_id, agency_id, expires_at) VALUES (?, ?, ?)";
+                "INSERT INTO SUBSCRIPTIONS (user_id, agency_id, expires_at, invoice_id, status) VALUES (?, ?, ?, ?, ?)";
 
         public static final String GET_SUBSCRIPTION = "" +
                 "SELECT \n" +

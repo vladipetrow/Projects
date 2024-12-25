@@ -1,22 +1,22 @@
 package com.example.workproject1.web.api;
 
-import com.example.workproject1.coreServices.MailgunService;
 import com.example.workproject1.coreServices.SubscriptionService;
 import com.example.workproject1.coreServices.UserService;
 import com.example.workproject1.coreServices.models.Agency;
 import com.example.workproject1.coreServices.models.Subscription;
 import com.example.workproject1.coreServices.models.User;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.util.Calendar;
 import java.util.List;
+import java.util.Map;
 
 @RestController
+@RequestMapping("/subscriptions")
 @CrossOrigin
-@RequestMapping()
 public class SubscriptionController {
+
     private final SubscriptionService subscriptionService;
     private final UserService userService;
 
@@ -24,53 +24,75 @@ public class SubscriptionController {
         this.subscriptionService = subscriptionService;
         this.userService = userService;
     }
+
     @PostMapping("/subscribe")
-    public Subscription subscribe(@RequestHeader(value = "Authorization") String token) throws SQLException {
+    public ResponseEntity<?> subscribe(@CookieValue(value = "Authorization", required = false) String token) {
+        try {
+            if (token == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token missing"));
+            }
 
-        int userId = 0;
-        int agencyId = 0;
-        String userRole  = userService.getRoleFromToken(token);
-        if (userRole.equals("[ROLE_USER]")) {
-            userId = userService.getIdFromToken(token);
-        } else {
-            agencyId = userService.getIdFromToken(token);
+            // Get user or agency details from token
+            String userRole = userService.getRoleFromToken(token);
+            int userId = 0;
+            int agencyId = 0;
+            String email;
+
+            if (userRole.equals("[ROLE_USER]")) {
+                userId = userService.getIdFromToken(token);
+                email = userService.getEmail(userId);
+            } else {
+                agencyId = userService.getIdFromToken(token);
+                email = userService.getEmail(agencyId);
+            }
+
+            // Create subscription and return the response
+            Subscription subscription = subscriptionService.createSubscription(userId, agencyId, email);
+            return ResponseEntity.ok(subscription);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
-
-        Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-
-        Calendar expiration = Calendar.getInstance();
-
-        expiration.setTime(timestamp);
-
-        expiration.add(Calendar.DAY_OF_WEEK, 30);
-
-        timestamp.setTime(expiration.getTime().getTime());
-
-        Calendar curr_time = Calendar.getInstance();
-        if(curr_time.equals(expiration)){
-            MailgunService.sendMail("Subscription expired.", "You subscription is about to expire!" +
-                    " Please renew it!","vladi.petrow@abv.bg");
-        }
-
-        return subscriptionService.createSubscription(userId, agencyId, timestamp);
     }
 
     @GetMapping("/get/subscription/{id}")
-    public Subscription getSubscriptionId(@PathVariable int id) {
-        return subscriptionService.getSubscriptionId(id);
+    public ResponseEntity<?> getSubscriptionById(@PathVariable int id) {
+        try {
+            Subscription subscription = subscriptionService.getSubscriptionById(id);
+            return ResponseEntity.ok(subscription);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Subscription not found"));
+        }
     }
 
     @DeleteMapping("/delete/subscription/{id}")
-    public void deleteSubscription(@PathVariable int id){
-        subscriptionService.deleteSubscription(id);
+    public ResponseEntity<?> deleteSubscription(@PathVariable int id) {
+        try {
+            subscriptionService.deleteSubscription(id);
+            return ResponseEntity.ok(Map.of("message", "Subscription deleted successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
     }
 
-    @GetMapping("/list/agency/subscriptions/{agency_id}")
-    public List<Agency> listSubscribedAgencyByID(@PathVariable int agency_id) {
-        return subscriptionService.listSubscribedAgencyByID(agency_id);
+    @GetMapping("/list/agency/{agencyId}")
+    public ResponseEntity<?> listAgencySubscriptions(@PathVariable int agencyId) {
+        try {
+            List<Agency> agencies = subscriptionService.listSubscribedAgenciesById(agencyId);
+            return ResponseEntity.ok(agencies);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
     }
-    @GetMapping("/list/user/subscriptions/{user_id}")
-    public List<User> listSubscribedUserByID(@PathVariable int user_id) {
-        return subscriptionService.listSubscribedUserByID(user_id);
+
+    @GetMapping("/list/user/{userId}")
+    public ResponseEntity<?> listUserSubscriptions(@PathVariable int userId) {
+        try {
+            List<User> users = subscriptionService.listSubscribedUsersById(userId);
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
     }
 }
+
+
