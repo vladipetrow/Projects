@@ -61,8 +61,7 @@ public class UserService {
     }
 
     public String getRoleFromToken(String token2) {
-        String token = token2;
-        String bodyEncoded = token.split("\\.")[1];
+        String bodyEncoded = token2.split("\\.")[1];
         String payloadAsString = new String(Base64.getUrlDecoder().decode(bodyEncoded));
 
         Map<String, Object> payload = null;
@@ -73,7 +72,12 @@ public class UserService {
         }
         return payload.get("authorities").toString();
     }
-    public  int getIdFromToken(String token) {
+
+    public  String getEmail(int id) {
+        return repository.getEmail(id);
+    }
+
+    public int getIdFromToken(String token) {
         String bodyEncoded = token.split("\\.")[1];
         String payloadAsString = new String(Base64.getUrlDecoder().decode(bodyEncoded));
 
@@ -97,9 +101,11 @@ public class UserService {
                 .map(Mappers::fromUserDAO)
                 .collect(Collectors.toList());
     }
+
     public void deleteUser(int id) {
         repository.deleteUser(id);
     }
+
     private static String sha256(String originalString) {
         MessageDigest digest;
         try {

@@ -58,6 +58,10 @@ public class MySQLUserRepository implements UserRepository {
                 (rs, rowNum) -> fromResultSet(rs), email);
     }
 
+    @Override
+    public String getEmail(int id) {
+        return jdbc.queryForObject(GET_EMAIL, String.class, id);
+    }
 
     public UserDAO getUser(int id) {
         return jdbc.queryForObject(GET_USER,
@@ -105,7 +109,7 @@ public class MySQLUserRepository implements UserRepository {
                 "WHERE p.email = ? AND p.passwordHash = ?";
         public static final String INSERT_USER =
                 "INSERT INTO Users (first_name, last_name, email, passwordHash, salt) VALUES (?, ?, ?, ?, ?)";
-
+        public static final String GET_EMAIL = "SELECT email FROM users WHERE id = ?";
 
         public static final String GET_USER = "" +
                 "SELECT \n" +
