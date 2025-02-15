@@ -7,19 +7,14 @@ import com.example.workproject1.security.JwtUtil;
 import com.example.workproject1.web.api.models.UserInput;
 
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import static com.example.workproject1.AppConstants.ACCESS_TOKEN_VALIDITY_MS;
 import static com.example.workproject1.AppConstants.REFRESH_TOKEN_VALIDITY_MS;
@@ -42,13 +37,11 @@ public class UserController {
     @PostMapping("user/login")
     public ResponseEntity<?> login(@RequestBody UserInput user) {
         try {
-            int userId = userService.authorizeUser(user.email, user.password);
+            int userId = userService.authorizeUser(user.getEmail(), user.getPasswordHash());
 
-            // Generate tokens
             String accessToken = jwtUtil.generateToken(String.valueOf(userId), List.of("ROLE_USER"), ACCESS_TOKEN_VALIDITY_MS);
             String refreshToken = jwtUtil.generateToken(String.valueOf(userId), List.of("ROLE_USER"), REFRESH_TOKEN_VALIDITY_MS);
 
-            // Create cookies using CookieUtil
             ResponseCookie accessCookie = cookieUtil.createCookie("Authorization", accessToken, ACCESS_TOKEN_VALIDITY_MS / 1000, true);
             ResponseCookie refreshCookie = cookieUtil.createCookie("RefreshToken", refreshToken, REFRESH_TOKEN_VALIDITY_MS / 1000, true);
 
@@ -61,36 +54,24 @@ public class UserController {
         }
     }
 
-    @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(HttpServletRequest request) {
+    @PostMapping("user/refresh-token")
+    public ResponseEntity<?> refreshToken(@CookieValue(value = "RefreshToken", required = false) String refreshToken) {
         try {
-            // Extract refresh token from cookies
-            String refreshToken = Arrays.stream(Optional.ofNullable(request.getCookies()).orElse(new Cookie[0]))
-                    .filter(cookie -> "RefreshToken".equals(cookie.getName()))
-                    .map(Cookie::getValue)
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Refresh token missing"));
-
-            // Validate the token
-            if (!jwtUtil.validateToken(refreshToken)) {
-                throw new IllegalArgumentException("Invalid refresh token");
+            // Validate Refresh Token
+            if (refreshToken == null || !jwtUtil.validateToken(refreshToken)) {
+                throw new IllegalArgumentException("Invalid or missing refresh token");
             }
 
-            // Extract user ID (subject) from the token
             Claims claims = jwtUtil.getClaimsFromToken(refreshToken);
             String userId = claims.getSubject();
 
-            // Generate a new access token
             String newAccessToken = jwtUtil.generateToken(userId, List.of("ROLE_USER"), ACCESS_TOKEN_VALIDITY_MS);
 
-            // Create a new access cookie using CookieUtil
             ResponseCookie newAccessCookie = cookieUtil.createCookie("Authorization", newAccessToken, ACCESS_TOKEN_VALIDITY_MS / 1000, true);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, newAccessCookie.toString())
                     .body(Map.of("message", "Token refreshed successfully"));
-        } catch (ExpiredJwtException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Refresh token expired"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
         }
@@ -111,8 +92,7 @@ public class UserController {
     @PostMapping("user/register")
     public ResponseEntity<?> register(@RequestBody UserInput registration) {
         try {
-            // Create user
-            userService.createUser(registration.first_name, registration.last_name, registration.email, registration.password);
+            userService.createUser(registration.getFirstName(), registration.getLastName(), registration.getEmail(), registration.getPasswordHash());
 
             return ResponseEntity.ok(Map.of("message", "Registration successful"));
         } catch (Exception e) {

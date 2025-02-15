@@ -55,9 +55,9 @@ public class MySQLPostRepository implements PostRepository {
                     return ps;
                 }, keyHolder);
             }
-            Timestamp post_date = new Timestamp(System.currentTimeMillis());
+
             Integer id = Objects.requireNonNull(keyHolder.getKey()).intValue();
-            return new PostDAO(id, location, price, area, description, user_id, agency_id, type, post_date);
+            return new PostDAO(id, location, price, area, description, user_id, agency_id, type, null);
         });
     }
 

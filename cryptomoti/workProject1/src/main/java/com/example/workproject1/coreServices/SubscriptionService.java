@@ -19,7 +19,6 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
 
-
 @Service
 public class SubscriptionService {
 
@@ -33,10 +32,11 @@ public class SubscriptionService {
 
     public Subscription createSubscription(int userId, int agencyId, String buyerEmail) throws JsonProcessingException {
         // Create a BTC invoice
-        String invoiceId = btcPayService.createInvoice(2, "USD", buyerEmail,"1").toString();
+        double paymentFee = 2.0;
+        String invoiceId = btcPayService.createInvoice(paymentFee, "USD", buyerEmail,"1").toString();
 
-        // Send payment link via email
-        MailgunService.sendMail(
+         //Send payment link via email
+         MailgunService.sendMail(
                 "Subscription",
                 "You have subscribed successfully! Please complete your payment via the link: " +
                         btcPayService.getInvoiceUrl(invoiceId),
@@ -45,21 +45,15 @@ public class SubscriptionService {
 
         // Save subscription with "PENDING" status
         Timestamp expirationDate = calculateExpirationDate();
-        subscriptionRepository.createSubscription(userId, agencyId, expirationDate, invoiceId);
 
-        Subscription subscription = new Subscription();
-        subscription.setUserId(userId);
-        subscription.setAgencyId(agencyId);
-        subscription.setExpirationDate(expirationDate);
-        subscription.setInvoiceId(invoiceId);
-        subscription.setBtcStatus(SubscriptionStatus.PENDING.name());
+        SubscriptionDAO subscriptionDAO = subscriptionRepository.createSubscription(userId, agencyId, expirationDate, invoiceId);
 
-        return subscription;
+        return Mappers.fromSubscriptionDAO(subscriptionDAO);
     }
 
     private Timestamp calculateExpirationDate() {
         Calendar expiration = Calendar.getInstance();
-        expiration.add(Calendar.DAY_OF_WEEK, 30); // Add 30 days to current date
+        expiration.add(Calendar.DAY_OF_WEEK, 30);
         return new Timestamp(expiration.getTimeInMillis());
     }
 
@@ -92,6 +86,9 @@ public class SubscriptionService {
         return expirationDate;
     }
 
+    public String getEmail(int id, String role) {
+        return subscriptionRepository.getEmailByRoleAndId(id, role);
+    }
 
     public List<Agency> listSubscribedAgenciesById(int agencyId) {
         return subscriptionRepository.listSubscribedAgencyByID(agencyId)

@@ -24,7 +24,7 @@ public class BTCPayWebhookController {
     private final SubscriptionService subscriptionService;
     private static final Logger log = LoggerFactory.getLogger(BTCPayWebhookController.class);
     @Value("&{webHookSecret}")
-    private static String SECRET; // Replace with your webhook secret
+    private static String SECRET;
 
     public BTCPayWebhookController(SubscriptionService subscriptionService) {
         this.subscriptionService = subscriptionService;
@@ -34,7 +34,6 @@ public class BTCPayWebhookController {
     public ResponseEntity<?> handleWebhook(@RequestBody String payload, @RequestHeader("BTCPay-Sig") String signature) {
         log.info("Received webhook with payload: {}", payload);
 
-        // Verify the HMAC signature
         if (!verifySignature(payload, signature)) {
             log.warn("Invalid webhook signature");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid signature");

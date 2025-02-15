@@ -8,8 +8,6 @@ import com.example.workproject1.coreServices.models.User;
 import com.example.workproject1.repositories.UserRepository;
 import com.example.workproject1.security.PasswordUtil;
 import com.google.api.client.util.Value;
-import org.apache.tomcat.util.json.JSONParser;
-import org.apache.tomcat.util.json.ParseException;
 import org.springframework.dao.DataAccessException;
 
 import java.util.*;
@@ -18,9 +16,7 @@ import java.util.stream.Collectors;
 
 public class UserService {
     private final UserRepository repository;
-
-    @Value("${passwordPeperUser}")
-    private static String PEPPER;
+    private String PEPPER="7778fcc9c652f35d5d4463bf1d1c94abcd";
 
     private final String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
             + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
@@ -34,7 +30,7 @@ public class UserService {
                 .matches();
     }
 
-    public User createUser(String first_name, String last_name, String email, String password) {
+    public void createUser(String first_name, String last_name, String email, String password) {
         if(!patternMatches(email,regexPattern)){
             throw new InvalidEmail();
         }
@@ -44,8 +40,7 @@ public class UserService {
         String salt = UUID.randomUUID().toString();
         String hash = PasswordUtil.sha256(salt + password + PEPPER);
         try {
-            return Mappers.fromUserDAO(
-                    repository.createUser(first_name, last_name, email, hash, salt));
+            repository.createUser(first_name, last_name, email, hash, salt);
         } catch (DataAccessException e) {
             throw new InvalidParametersForUser();
         }
@@ -57,44 +52,17 @@ public class UserService {
             throw new UserNotExist();
         }
 
-        String hashedPassword = PasswordUtil.sha256(user.salt + password + PEPPER);
+        String hashedPassword = PasswordUtil.sha256(user.getSalt() + password + PEPPER);
 
-        if (!hashedPassword.equals(user.passwordHash)) {
+        if (!hashedPassword.equals(user.getPasswordHash())) {
             throw new UserNotExist();
         }
 
-        return user.id;
+        return user.getId();
     }
 
-    public String getRoleFromToken(String token2) {
-        String bodyEncoded = token2.split("\\.")[1];
-        String payloadAsString = new String(Base64.getUrlDecoder().decode(bodyEncoded));
-
-        Map<String, Object> payload = null;
-        try {
-            payload = new JSONParser(payloadAsString).parseObject();
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-        return payload.get("authorities").toString();
-    }
-
-    public  String getEmail(int id) {
+    public String getEmail(int id) {
         return repository.getEmail(id);
-    }
-
-    public int getIdFromToken(String token) {
-        String bodyEncoded = token.split("\\.")[1];
-        String payloadAsString = new String(Base64.getUrlDecoder().decode(bodyEncoded));
-
-        Map<String, Object> payload = null;
-        try {
-            payload = new JSONParser(payloadAsString).parseObject();
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
-
-        return Integer.parseInt((String) payload.get("sub"));
     }
 
     public User getUser(int id) {

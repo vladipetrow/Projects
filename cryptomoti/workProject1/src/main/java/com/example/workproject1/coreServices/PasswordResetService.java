@@ -30,14 +30,14 @@ public class PasswordResetService {
         // Check if the email exists in the `users` table
         UserDAO user = userRepository.getUserByEmail(email);
         if (user != null) {
-            updateUserPassword(user.id, user.salt, newPassword);
+            updateUserPassword(user.getId(), user.getSalt(), newPassword);
             return;
         }
 
         // Check if the email exists in the `agencies` table
         AgencyDAO agency = agencyRepository.getAgencyByEmail(email);
         if (agency != null) {
-            updateAgencyPassword(agency.id, agency.salt, newPassword);
+            updateAgencyPassword(agency.getId(), agency.getSalt(), newPassword);
             return;
         }
 

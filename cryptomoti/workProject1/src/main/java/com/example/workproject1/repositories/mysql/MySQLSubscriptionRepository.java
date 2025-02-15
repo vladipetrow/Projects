@@ -14,7 +14,7 @@ import java.sql.*;
 import java.util.List;
 import java.util.Objects;
 
-import static com.example.workproject1.repositories.mysql.MySQLSubscriptionRepository.Queries.*;
+import static com.example.workproject1.repositories.mysql.MySQLSubscriptionRepository.Queries.INSERT_SUBSCRIPTION;
 
 public class MySQLSubscriptionRepository implements SubscriptionRepository {
     private final TransactionTemplate txTemplate;
@@ -58,50 +58,73 @@ public class MySQLSubscriptionRepository implements SubscriptionRepository {
         });
     }
 
+    @Override
     public SubscriptionDAO getSubscriptionId(int id) {
-        return jdbc.queryForObject(GET_SUBSCRIPTION,
-                (rs, rowNum) -> fromResultSet(rs), id);
+        return jdbc.queryForObject(Queries.GET_SUBSCRIPTION_BY_ID, (rs, rowNum) -> fromResultSet(rs), id);
     }
 
-    public  List<AgencyDAO> listSubscribedAgencyByID(int agency_id) {
-         return  jdbc.query(GET_AGENCY_SUBSCRIPTION,
-                (rs, rowNum) -> fromResultSetAgency(rs), agency_id);
+    @Override
+    public List<AgencyDAO> listSubscribedAgencyByID(int agencyId) {
+        return jdbc.query(Queries.GET_AGENCY_SUBSCRIPTION, (rs, rowNum) -> fromResultSetAgency(rs), agencyId);
     }
 
-    public List<UserDAO> listSubscribedUserByID(int user_id) {
-        return jdbc.query(GET_USER_SUBSCRIPTION,
-                (rs, rowNum) -> fromResultSetUser(rs), user_id);
+    @Override
+    public List<UserDAO> listSubscribedUserByID(int userId) {
+        return jdbc.query(Queries.GET_USER_SUBSCRIPTION, (rs, rowNum) -> fromResultSetUser(rs), userId);
     }
 
-    public Timestamp getUserExpirationDate(int user_id){
-        return jdbc.queryForObject(GET_USER_EXPIRATION_DATE,
-                (rs, rowNum) -> fromResultSetTime(rs), user_id);
+    @Override
+    public String getEmailByRoleAndId(int id, String role) {
+        if ("ROLE_USER".equals(role)) {
+            return jdbc.queryForObject(
+                    "SELECT email FROM USERS WHERE id = ?",
+                    String.class,
+                    id
+            );
+        } else if ("ROLE_AGENCY".equals(role)) {
+            return jdbc.queryForObject(
+                    "SELECT email FROM AGENCY WHERE id = ?",
+                    String.class,
+                    id
+            );
+        } else {
+            throw new IllegalArgumentException("Invalid role: " + role);
+        }
     }
 
-    public Timestamp getAgencyExpirationDate(int agency_id){
-        return jdbc.queryForObject(GET_AGENCY_EXPIRATION_DATE,
-                (rs, rowNum) -> fromResultSetTime(rs), agency_id);
+    @Override
+    public Timestamp getUserExpirationDate(int userId) {
+        return jdbc.queryForObject(Queries.GET_USER_EXPIRATION_DATE, (rs, rowNum) -> fromResultSetTime(rs), userId);
     }
 
+    @Override
+    public Timestamp getAgencyExpirationDate(int agencyId) {
+        return jdbc.queryForObject(Queries.GET_AGENCY_EXPIRATION_DATE, (rs, rowNum) -> fromResultSetTime(rs), agencyId);
+    }
+
+    @Override
     public void deleteSubscription(int id) {
         txTemplate.execute(status -> {
-            jdbc.update(DELETE_SUBSCRIPTIONS, id);
+            jdbc.update(Queries.DELETE_SUBSCRIPTIONS, id);
             return null;
         });
     }
 
-    public void updateSubscriptionStatus(String invoice_id, SubscriptionStatus status) {
+    @Override
+    public void updateSubscriptionStatus(String invoiceId, SubscriptionStatus status) {
         jdbc.update(
-                "UPDATE SUBSCRIPTIONS SET status = ? WHERE invoice_id = ?",
-                status.name(), invoice_id
+                "UPDATE SUBSCRIPTIONS SET btc_status = ? WHERE invoice_id = ?",
+                status.name(),
+                invoiceId
         );
     }
 
-    public SubscriptionDAO findByInvoiceId(String invoice_id) {
+    @Override
+    public SubscriptionDAO findByInvoiceId(String invoiceId) {
         return jdbc.queryForObject(
                 "SELECT * FROM SUBSCRIPTIONS WHERE invoice_id = ?",
                 (rs, rowNum) -> fromResultSet(rs),
-                invoice_id
+                invoiceId
         );
     }
 
@@ -114,6 +137,7 @@ public class MySQLSubscriptionRepository implements SubscriptionRepository {
                 rs.getString("address")
         );
     }
+
     private UserDAO fromResultSetUser(ResultSet rs) throws SQLException {
         return new UserDAO(
                 rs.getInt("id"),
@@ -122,62 +146,43 @@ public class MySQLSubscriptionRepository implements SubscriptionRepository {
                 rs.getString("email")
         );
     }
+
     private SubscriptionDAO fromResultSet(ResultSet rs) throws SQLException {
         return new SubscriptionDAO(
                 rs.getInt("id"),
                 rs.getInt("user_id"),
                 rs.getInt("agency_id"),
                 rs.getTimestamp("expires_at"),
-                rs.getString("invoice_id"), // Add invoice ID
-                rs.getString("status") // Add status
+                rs.getString("btc_status"),
+                rs.getString("invoice_id")
         );
     }
 
     private Timestamp fromResultSetTime(ResultSet rs) throws SQLException {
         return rs.getTimestamp("expires_at");
     }
+
     static class Queries {
-        public static final String GET_USER_EXPIRATION_DATE = ""+
-                "SELECT expires_at FROM subscriptions sb WHERE sb.user_id = ?";
+        public static final String GET_USER_EXPIRATION_DATE =
+                "SELECT expires_at FROM subscriptions WHERE user_id = ?";
 
-        public static final String GET_AGENCY_EXPIRATION_DATE = ""+
-                "SELECT expires_at FROM subscriptions sb WHERE sb.agency_id = ?";
+        public static final String GET_AGENCY_EXPIRATION_DATE =
+                "SELECT expires_at FROM subscriptions WHERE agency_id = ?";
+
         public static final String INSERT_SUBSCRIPTION =
-                "INSERT INTO SUBSCRIPTIONS (user_id, agency_id, expires_at, invoice_id, status) VALUES (?, ?, ?, ?, ?)";
+                "INSERT INTO subscriptions (user_id, agency_id, expires_at) VALUES (?, ?, ?)";
 
-        public static final String GET_SUBSCRIPTION = "" +
-                "SELECT \n" +
-                "    p.id,\n" +
-                "    p.user_id,\n" +
-                "    p.agency_id,\n" +
-                "    p.expires_at \n" +
-                "FROM\n" +
-                "    SUBSCRIPTIONS p \n" +
-                "WHERE p.id = ?";
-        public static final String GET_USER_SUBSCRIPTION = "" +
-        "SELECT " +
-        "p.id, \n" +
-        "p.first_name, \n" +
-        "p.last_name, \n" +
-        "p.email, \n" +
-        "sb.expires_at \n" +
-        "FROM \n" +
-        "Users p \n" +
-        "Join SUBSCRIPTIONS sb on p.id = sb.user_id \n" +
-        "WHERE sb.user_id = ?" ;
+        public static final String GET_SUBSCRIPTION_BY_ID =
+                "SELECT * FROM subscriptions WHERE id = ?";
 
-        public static final String GET_AGENCY_SUBSCRIPTION = "" +
-         "SELECT \n" +
-         "p.id, \n"+
-         "p.name_of_agency, \n" +
-         "p.email, \n" +
-         "p.phone_number, \n" +
-         "p.address \n"  +
-         "FROM \n" +
-         "AGENCY p \n" +
-         "JOIN SUBSCRIPTIONS sb on p.id = sb.agency_id \n" +
-         "WHERE sb.agency_id = ?";
+        public static final String GET_USER_SUBSCRIPTION =
+                "SELECT u.id, u.first_name, u.last_name, u.email, s.expires_at FROM users u JOIN subscriptions s ON u.id = s.user_id WHERE s.user_id = ?";
 
-        public static final String DELETE_SUBSCRIPTIONS = "DELETE FROM SUBSCRIPTIONS WHERE id = ?";
+        public static final String GET_AGENCY_SUBSCRIPTION =
+                "SELECT a.id, a.nameOf_agency, a.email, a.phone_number, a.address FROM agency a JOIN subscriptions s ON a.id = s.agency_id WHERE s.agency_id = ?";
+
+        public static final String DELETE_SUBSCRIPTIONS =
+                "DELETE FROM subscriptions WHERE id = ?";
     }
 }
+

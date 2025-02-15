@@ -22,11 +22,13 @@ public class AgencyService {
     public AgencyService(AgencyRepository repository) {
         this.repository = repository;
     }
-    public static boolean patternMatches(String emailAddress, String regexPattern) {
+
+    private static boolean patternMatches(String emailAddress, String regexPattern) {
         return Pattern.compile(regexPattern)
                 .matcher(emailAddress)
                 .matches();
     }
+
     public Agency createAgency(String nameOfAgency, String email, String password, String phone_number, String address) {
         if(!patternMatches(email,regexPattern)){
             throw new InvalidEmail();
@@ -50,21 +52,25 @@ public class AgencyService {
     public int authorizeAgency(String email, String password) {
         Agency agency = Mappers.fromAgencyDAO(repository.getAgencyByEmail(email));
         if (agency == null) {
+            throw new AgencyNotFound();
+        }
+
+        String hashedPassword = PasswordUtil.sha256(agency.getSalt() + password + PEPPER);
+
+        if (!hashedPassword.equals(agency.getPasswordHash())) {
             throw new UserNotExist();
         }
 
-        String hashedPassword = PasswordUtil.sha256(agency.salt + password + PEPPER);
-
-        if (!hashedPassword.equals(agency.passwordHash)) {
-            throw new UserNotExist();
-        }
-
-        return agency.id;
+        return agency.getId();
     }
 
 
     public Agency getAgency(int id) {
         return Mappers.fromAgencyDAO(repository.getAgency(id));
+    }
+
+    public String getEmail(int id) {
+        return repository.getEmail(id);
     }
 
     public List<Agency> listAgency(int page, int pageSize) {

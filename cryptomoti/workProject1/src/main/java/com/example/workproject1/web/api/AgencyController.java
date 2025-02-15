@@ -37,16 +37,12 @@ public class AgencyController {
     @PostMapping("agency/login")
     public ResponseEntity<?> login(@RequestBody AgencyInput agency) {
         try {
-            // Authenticate the agency
-            int agencyId = agencyService.authorizeAgency(agency.email, agency.passwordHash);
+            int agencyId = agencyService.authorizeAgency(agency.getEmail(), agency.getPasswordHash());
 
-            // Generate Access Token
             String accessToken = jwtUtil.generateToken(String.valueOf(agencyId), List.of("ROLE_AGENCY"), ACCESS_TOKEN_VALIDITY_MS);
 
-            // Generate Refresh Token
             String refreshToken = jwtUtil.generateToken(String.valueOf(agencyId), List.of("ROLE_AGENCY"), REFRESH_TOKEN_VALIDITY_MS);
 
-            // Set tokens as HttpOnly cookies
             ResponseCookie accessCookie = cookieUtil.createCookie("Authorization", accessToken, ACCESS_TOKEN_VALIDITY_MS / 1000, true);
             ResponseCookie refreshCookie = cookieUtil.createCookie("RefreshToken", refreshToken, REFRESH_TOKEN_VALIDITY_MS / 1000, true);
 
@@ -62,19 +58,15 @@ public class AgencyController {
     @PostMapping("/agency/refresh-token")
     public ResponseEntity<?> refreshToken(@CookieValue(value = "RefreshToken", required = false) String refreshToken) {
         try {
-            // Validate Refresh Token
             if (refreshToken == null || !jwtUtil.validateToken(refreshToken)) {
                 throw new IllegalArgumentException("Invalid or missing refresh token");
             }
 
-            // Extract agency ID from token
             Claims claims = jwtUtil.getClaimsFromToken(refreshToken);
             String agencyId = claims.getSubject();
 
-            // Generate a new Access Token
             String newAccessToken = jwtUtil.generateToken(agencyId, List.of("ROLE_AGENCY"), ACCESS_TOKEN_VALIDITY_MS);
 
-            // Set new Access Token as an HttpOnly cookie
             ResponseCookie newAccessCookie = cookieUtil.createCookie("Authorization", newAccessToken, ACCESS_TOKEN_VALIDITY_MS / 1000, true);
 
             return ResponseEntity.ok()
@@ -87,7 +79,6 @@ public class AgencyController {
 
     @PostMapping("/agency/logout")
     public ResponseEntity<?> logout() {
-        // Clear cookies by setting maxAge to 0
         ResponseCookie accessCookie = cookieUtil.createEmptyCookie("Authorization", true);
         ResponseCookie refreshCookie = cookieUtil.createEmptyCookie("RefreshToken", true);
 
@@ -101,13 +92,12 @@ public class AgencyController {
     @PostMapping("agency/register")
     public ResponseEntity<?> registration(@RequestBody AgencyInput registration) {
         try {
-            // Create a new agency
             Agency newAgency = agencyService.createAgency(
-                    registration.name_of_agency,
-                    registration.email,
-                    registration.passwordHash,
-                    registration.phone_number,
-                    registration.address
+                    registration.getNameOfAgency(),
+                    registration.getEmail(),
+                    registration.getPasswordHash(),
+                    registration.getPhoneNumber(),
+                    registration.getAddress()
             );
 
             return ResponseEntity.ok(Map.of("message", "Registration successful", "agency", newAgency));

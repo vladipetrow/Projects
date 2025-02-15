@@ -1,4 +1,4 @@
-package com.example.workproject1.web;
+package com.example.workproject1.web.api;
 
 import com.example.workproject1.coreServices.PasswordResetService;
 import org.springframework.http.HttpStatus;

@@ -2,35 +2,31 @@ package com.example.workproject1.web.api.models;
 
 import com.example.workproject1.coreServices.models.ApartmentType;
 
+import java.util.Objects;
+
 public class PostInput {
-    public Integer post_id;
-    public String location;
-    public int price;
-    public int area;
-    public String description;
+    private final Integer postId;
+    private String location;
+    private int price;
+    private int area;
+    private String description;
+    private ApartmentType type;
+    private int userId;
+    private int agencyId;
 
-    public ApartmentType type;
-    public int user_id;
-
-    public int agency_id;
-
-    public PostInput(Integer post_id, String location, int price, int area, String description,int user_id ,int agency_id, ApartmentType type) {
-        this.post_id = post_id;
+    public PostInput(Integer postId, String location, int price, int area, String description,int userId ,int agencyId, ApartmentType type) {
+        this.postId = postId;
         this.location = location;
         this.price = price;
         this.area = area;
         this.description = description;
         this.type = type;
-        this.user_id = user_id;
-        this.agency_id = agency_id;
+        this.userId = userId;
+        this.agencyId = agencyId;
     }
 
-    public Integer getPost_id() {
-        return post_id;
-    }
-
-    public void setPost_id(Integer post_id) {
-        this.post_id = post_id;
+    public Integer getPostId() {
+        return postId;
     }
 
     public String getLocation() {
@@ -73,19 +69,48 @@ public class PostInput {
         this.type = type;
     }
 
-    public int getUser_id() {
-        return user_id;
+    public int getUserId() {
+        return userId;
     }
 
-    public void setUser_id(int user_id) {
-        this.user_id = user_id;
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
-    public int getAgency_id() {
-        return agency_id;
+    public int getAgencyId() {
+        return agencyId;
     }
 
-    public void setAgency_id(int agency_id) {
-        this.agency_id = agency_id;
+    public void setAgencyId(int agencyId) {
+        this.agencyId = agencyId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PostInput postInput = (PostInput) o;
+        return price == postInput.price && area == postInput.area && userId == postInput.userId
+                && agencyId == postInput.agencyId && Objects.equals(postId, postInput.postId)
+                && Objects.equals(location, postInput.location) && Objects.equals(description, postInput.description) && type == postInput.type;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(postId, location, price, area, description, type, userId, agencyId);
+    }
+
+    @Override
+    public String toString() {
+        return "PostInput{" +
+                "post_id=" + postId +
+                ", location='" + location + '\'' +
+                ", price=" + price +
+                ", area=" + area +
+                ", description='" + description + '\'' +
+                ", type=" + type +
+                ", user_id=" + userId +
+                ", agency_id=" + agencyId +
+                '}';
     }
 }

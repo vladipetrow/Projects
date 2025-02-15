@@ -9,13 +9,14 @@ import java.sql.Timestamp;
 import java.util.List;
 
 public interface SubscriptionRepository {
-    SubscriptionDAO createSubscription(int user_id, int agency_id, Timestamp expiration_date, String invoice_id);
+    SubscriptionDAO createSubscription(int userId, int agencyId, Timestamp expiration_date, String invoice_id);
     SubscriptionDAO getSubscriptionId(int id);
     SubscriptionDAO findByInvoiceId(String invoiceId);
-    Timestamp getUserExpirationDate(int user_id);
-    Timestamp getAgencyExpirationDate(int agency_id);
-    List<AgencyDAO> listSubscribedAgencyByID(int agency_id);
-    List<UserDAO> listSubscribedUserByID(int user_id);
+    Timestamp getUserExpirationDate(int userId);
+    Timestamp getAgencyExpirationDate(int agencyId);
+    List<AgencyDAO> listSubscribedAgencyByID(int agencyId);
+    List<UserDAO> listSubscribedUserByID(int userId);
+    String getEmailByRoleAndId(int id, String role);
     void deleteSubscription(int id);
     void updateSubscriptionStatus(String invoiceId, SubscriptionStatus status);
 }

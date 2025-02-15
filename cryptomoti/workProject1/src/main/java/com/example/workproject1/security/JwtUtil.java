@@ -45,6 +45,16 @@ public class JwtUtil {
         }
     }
 
+    public int getIdFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        return Integer.parseInt(claims.getSubject());
+    }
+
+    public String getRoleFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        return claims.get("authorities", List.class).toString();
+    }
+
     public List<GrantedAuthority> getAuthoritiesFromClaims(Claims claims) {
         List<String> roles = claims.get("authorities", List.class);
         return roles.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
