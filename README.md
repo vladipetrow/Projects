@@ -18,8 +18,8 @@ This repository serves as a collection of projects for learning, experimentation
 ## Projects
 Here are some of the key projects in this repository:
 
-- **Project 1: [Bomb]** - This is a 2d game called Bomberman, written with Java and Java Swing, the goal is to kill the enemies with bombs and stay alive.
-- **Project 2: [Cryptomoti]** - A website where users can post their apartments or houses for sale or rent, and you can activate a subscription with BTC payment. 
+- **[Bomb]** - This is a 2d game called Bomberman, written with Java and Java Swing, the goal is to kill the enemies with bombs and stay alive.
+- **[Cryptomoti]** - A website where users can post their apartments or houses for sale or rent, and you can activate a subscription with BTC payment. 
 
 _For more details, check the individual project directories._
 
