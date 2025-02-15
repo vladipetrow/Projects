@@ -131,7 +131,7 @@ public class AgencyServiceTests {
         Agency result = agencyService.getAgency(agencyId);
 
         assertNotNull(result);
-        assertEquals(expectedAgency.getName_of_agency(), result.getName_of_agency());
+        assertEquals(expectedAgency.getNameOfAgency(), result.getNameOfAgency());
         verify(repository, times(1)).getAgency(agencyId);
     }
 

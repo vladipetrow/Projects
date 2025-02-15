@@ -126,8 +126,8 @@ public class UserServiceTests {
         User user = userService.getUser(1);
 
         assertNotNull(user);
-        assertEquals(FIRST_NAME, user.getFirst_name());
-        assertEquals(LAST_NAME, user.getLast_name());
+        assertEquals(FIRST_NAME, user.getFirstName());
+        assertEquals(LAST_NAME, user.getLastName());
         assertEquals(VALID_EMAIL, user.getEmail());
         verify(repository, times(1)).getUser(1);
     }

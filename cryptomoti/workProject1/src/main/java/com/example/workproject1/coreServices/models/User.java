@@ -31,7 +31,7 @@ public class User {
         this.firstName = firstName;
     }
 
-    public String getLast_name() {
+    public String getLastName() {
         return lastName;
     }
 
