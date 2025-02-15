@@ -27,7 +27,6 @@ const PasswordResetForm = () => {
         throw new Error("Failed to reset password. Please try again.");
       }
 
-      // Display success message and redirect to login after a delay
       setSuccess("Your password has been successfully reset.");
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {

@@ -8,6 +8,7 @@ import Register from "./auth/Register";
 import CreateAd from "./ads/CreateAd";
 import AgencySubscription from "./subscription/AgencySubscription";
 import PasswordResetForm from "./auth/PasswordResetForm";
+import NotFound from "./NotFound";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function AppContent() {
         <Route path="/password-reset" element={<PasswordResetForm />} />
         <Route path="/create-ad" element={<CreateAd />} />
         <Route path="/subscription/agency" element={<AgencySubscription />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );

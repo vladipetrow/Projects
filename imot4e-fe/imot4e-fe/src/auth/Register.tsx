@@ -1,4 +1,14 @@
-import { Box, Button, FormControl, FormControlLabel, Radio, RadioGroup, TextField, Typography, Alert } from "@mui/material";
+import {
+  Box,
+  Button,
+  FormControl,
+  FormControlLabel,
+  Radio,
+  RadioGroup,
+  TextField,
+  Typography,
+  Alert,
+} from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -8,18 +18,60 @@ const Register = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [passwordHash, setPassword] = useState("");
   const [nameOfAgency, setNameOfAgency] = useState("");
   const [address, setAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(""); // State to store success message
+
+  const validateFields = () => {
+    if (!email || !passwordHash) {
+      return "Имейла и паролата са задължителни.";
+    }
+
+    if (isAgency) {
+      if (!nameOfAgency || !address || !phoneNumber) {
+        return "Всички полета трябва да бъдат попълнени за успешна регистрация.";
+      }
+      if (!/^\d{10}$/.test(phoneNumber)) {
+        return "Телефонният номер трябва да е точно 10 цифри.";
+      }
+    } else {
+      if (!firstName || !lastName) {
+        return "Името и Фамилията са задължителни.";
+      }
+    }
+
+    return null;
+  };
 
   const handleRegister = async () => {
+    setError("");
+    setSuccess("");
+
+    const validationError = validateFields();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     try {
       const endpoint = isAgency ? "agency/register" : "user/register";
       const data = isAgency
-        ? { nameOfAgency, address, phoneNumber, email, password }
-        : { firstName, lastName, email, password };
+        ? {
+            nameOfAgency,
+            address,
+            phoneNumber,
+            email,
+            passwordHash,
+          }
+        : {
+            firstName,
+            lastName,
+            email,
+            passwordHash,
+          };
 
       const response = await fetch(`http://localhost:8080/${endpoint}`, {
         method: "POST",
@@ -29,10 +81,14 @@ const Register = () => {
 
       if (!response.ok) throw new Error("Registration failed");
 
-      navigate("/login");
+      // Show success message
+      setSuccess("Успешна регистрация!");
+      setTimeout(() => {
+        navigate("/login"); // Redirect after 2 seconds
+      }, 2000);
     } catch (err) {
       console.error(err);
-      setError("Registration failed. Please try again.");
+      setError("Регистрацията не бе успешна. Опитайте отново.");
     }
   };
 
@@ -61,16 +117,22 @@ const Register = () => {
           Създай профил
         </Typography>
         {error && <Alert severity="error">{error}</Alert>}
+        {success && <Alert severity="success">{success}</Alert>}
         <FormControl>
-          <RadioGroup row defaultValue="individual" name="radio-buttons-group">
+          <RadioGroup
+            row
+            defaultValue="individual"
+            name="radio-buttons-group"
+            onChange={(e) => setIsAgency(e.target.value === "agency")}
+          >
             <FormControlLabel
               value="individual"
-              control={<Radio onClick={() => setIsAgency(false)} />}
+              control={<Radio />}
               label="Частно лице"
             />
             <FormControlLabel
               value="agency"
-              control={<Radio onClick={() => setIsAgency(true)} />}
+              control={<Radio />}
               label="Агенция"
             />
           </RadioGroup>
@@ -122,7 +184,7 @@ const Register = () => {
           id="password"
           label="Парола"
           type="password"
-          value={password}
+          value={passwordHash}
           onChange={(e) => setPassword(e.target.value)}
         />
         <Button variant="contained" onClick={handleRegister}>

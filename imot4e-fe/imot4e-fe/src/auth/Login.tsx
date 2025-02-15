@@ -1,30 +1,38 @@
-import { Box, Button, TextField, Typography } from "@mui/material";
+import { Box, Button, TextField, Typography, Alert } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [passwordHash, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(""); // State to show success message
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
+    setError("");
+    setSuccess("");
+
     try {
       const response = await fetch("http://localhost:8080/user/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, passwordHash }),
         credentials: "include",
       });
 
       if (!response.ok) throw new Error("Invalid login credentials");
 
-      login(); // Update authentication state
-      navigate("/",{ replace: true }); // Redirect to homepage
+      // Show success message
+      setSuccess("Входът е успешен!");
+      login();
+
+      // Redirect to home page after a brief delay
+      setTimeout(() => navigate("/", { replace: true }), 2000);
     } catch (err) {
-      setError("Login failed. Please check your credentials.");
+      setError("Входът не бе успешен. Моля, проверете вашите данни за достъп.");
     }
   };
 
@@ -52,11 +60,18 @@ const Login = () => {
         <Typography variant="h4" align="center" gutterBottom>
           Вход
         </Typography>
+
         {error && (
-          <Typography color="error" variant="body2" align="center" sx={{ mb: 2 }}>
+          <Alert severity="error" sx={{ mb: 2 }}>
             {error}
-          </Typography>
+          </Alert>
         )}
+        {success && (
+          <Alert severity="success" sx={{ mb: 2 }}>
+            {success}
+          </Alert>
+        )}
+
         <TextField
           label="Имейл"
           variant="outlined"
@@ -71,7 +86,7 @@ const Login = () => {
           variant="outlined"
           fullWidth
           margin="normal"
-          value={password}
+          value={passwordHash}
           onChange={(e) => setPassword(e.target.value)}
         />
         <Button
@@ -82,12 +97,17 @@ const Login = () => {
         >
           Вход
         </Button>
+
         <Box sx={{ mt: 2, textAlign: "center" }}>
           <Typography
             variant="body2"
             component="a"
             href="/register"
-            sx={{ textDecoration: "none", color: "primary.main", "&:hover": { textDecoration: "underline" } }}
+            sx={{
+              textDecoration: "none",
+              color: "primary.main",
+              "&:hover": { textDecoration: "underline" },
+            }}
           >
             Регистрирай се
           </Typography>
@@ -97,7 +117,11 @@ const Login = () => {
             variant="body2"
             component="a"
             href="/password-reset"
-            sx={{ textDecoration: "none", color: "primary.main", "&:hover": { textDecoration: "underline" } }}
+            sx={{
+              textDecoration: "none",
+              color: "primary.main",
+              "&:hover": { textDecoration: "underline" },
+            }}
           >
             Забравена парола?
           </Typography>
