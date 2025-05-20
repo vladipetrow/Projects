@@ -6,7 +6,8 @@ import com.example.workproject1.repositories.models.PostDAO;
 import java.util.List;
 
 public interface PostRepository {
-    PostDAO createPost(String location, int price, int area, String description, int user_id, int agency_id, ApartmentType type);
+    PostDAO createPost(String location, int price, int area, String description, int user_id, int agency_id,
+                       ApartmentType type, List<String> imageUrls);
     List<PostDAO> filterBy(String location, int price, ApartmentType type);
     List<PostDAO> getPostsForUser(int user_id);
     List<PostDAO> getPostsForAgency(int agency_id);
@@ -15,5 +16,5 @@ public interface PostRepository {
     PostDAO getPost(int id);
     List<PostDAO> listPosts(int page, int pageSize);
     void deletePost(int id);
-
+    void addImagesToPost(int postId, List<String> imagesURL);
 }

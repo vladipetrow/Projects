@@ -13,8 +13,8 @@ public class CoreBeans {
         return new UserService(repository);
     }
     @Bean
-    public PostService postService(PostRepository repository, SubscriptionService subscriptionService) {
-        return new PostService(repository, subscriptionService);
+    public PostService postService(PostRepository repository, SubscriptionService subscriptionService, CloudinaryService cloudinaryService) {
+        return new PostService(repository, subscriptionService, cloudinaryService);
     }
     @Bean
     public AgencyService agencyService(AgencyRepository repository) {

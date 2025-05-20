@@ -13,9 +13,9 @@ public class PasswordResetService {
 
     private final UserRepository userRepository;
     private final AgencyRepository agencyRepository;
-    @Value("${passwordPeperUser}")
+    @Value("${USER_PAPER}")
     private static String PEPPER_USER;
-    @Value("${passwordPeperAgency}")
+    @Value("${AGENCY_PAPER}")
     private static String PEPPER_AGENCY;
 
     public PasswordResetService(UserRepository userRepository, AgencyRepository agencyRepository) {

@@ -4,7 +4,6 @@ import com.example.workproject1.coreServices.ServiceExeptions.*;
 import com.example.workproject1.coreServices.models.Agency;
 import com.example.workproject1.repositories.AgencyRepository;
 import com.example.workproject1.security.PasswordUtil;
-import com.google.api.client.util.Value;
 import org.springframework.dao.DataAccessException;
 
 import java.util.List;
@@ -14,8 +13,7 @@ import java.util.stream.Collectors;
 
 public class AgencyService {
     private final AgencyRepository repository;
-    @Value("${passwordPeper}")
-    private static String PEPPER ;
+    private static final String PEPPER = "1115gci9b621f36d5d3313bf1d1c55aqws";
     private final String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
             + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
 

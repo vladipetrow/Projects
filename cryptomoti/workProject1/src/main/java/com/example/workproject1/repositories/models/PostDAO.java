@@ -3,6 +3,7 @@ package com.example.workproject1.repositories.models;
 import com.example.workproject1.coreServices.models.ApartmentType;
 
 import java.sql.Timestamp;
+import java.util.List;
 import java.util.Objects;
 
 public class PostDAO {
@@ -15,8 +16,10 @@ public class PostDAO {
     private int area;
     private String description;
     private ApartmentType type;
+    private List<String> imageUrls;
 
-    public PostDAO(Integer postId, String location, int price, int area, String description,int userId, int agencyId, ApartmentType type, Timestamp postDate) {
+    public PostDAO(Integer postId, String location, int price, int area, String description, int userId, int agencyId,
+                   ApartmentType type, Timestamp postDate, List<String> imageUrls) {
         this.postId = postId;
         this.location = location;
         this.price = price;
@@ -26,8 +29,15 @@ public class PostDAO {
         this.userId = userId;
         this.agencyId = agencyId;
         this.postDate = postDate;
+        this.imageUrls = imageUrls;
     }
 
+    public List<String> getImageUrl() {
+        return imageUrls;
+    }
+    public void setImageUrl(List<String> imageUrls) {
+        this.imageUrls = imageUrls;
+    }
     public Integer getPostId() {
         return postId;
     }

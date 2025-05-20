@@ -1,5 +1,6 @@
 package com.example.workproject1.web.api;
 
+import com.example.workproject1.coreServices.MailgunService;
 import com.example.workproject1.coreServices.UserService;
 import com.example.workproject1.coreServices.models.User;
 import com.example.workproject1.security.CookieUtil;
@@ -93,6 +94,9 @@ public class UserController {
     public ResponseEntity<?> register(@RequestBody UserInput registration) {
         try {
             userService.createUser(registration.getFirstName(), registration.getLastName(), registration.getEmail(), registration.getPasswordHash());
+
+//            MailgunService.sendMail("Successfull registration!","Welcome to Cryptomoti, your registration is" +
+//                    " succesfull!","vladislav.petrow01@gmail.com");
 
             return ResponseEntity.ok(Map.of("message", "Registration successful"));
         } catch (Exception e) {

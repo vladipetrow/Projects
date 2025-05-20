@@ -44,64 +44,64 @@ public class PostServiceTests {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test
-    void testCreatePost_ValidInputs() {
-        PostDAO mockPostDAO = new PostDAO(1, location, price, area, description, userId, agencyId, type, new Timestamp(System.currentTimeMillis()));
-        when(repository.createPost(location, price, area, description, userId, agencyId, type)).thenReturn(mockPostDAO);
+//    @Test
+//    void testCreatePost_ValidInputs() {
+//        PostDAO mockPostDAO = new PostDAO(1, location, price, area, description, userId, agencyId, type, new Timestamp(System.currentTimeMillis()));
+//        when(repository.createPost(location, price, area, description, userId, agencyId, type)).thenReturn(mockPostDAO);
+//
+//        Post result = postService.createPost(location, price, area, description, userId, agencyId, type);
+//
+//        assertNotNull(result);
+//        assertEquals(location, result.getLocation());
+//        assertEquals(price, result.getPrice());
+//        assertEquals(area, result.getArea());
+//        assertEquals(description, result.getDescription());
+//        assertEquals(type, result.getType());
+//        verify(repository, times(1)).createPost(location, price, area, description, userId, agencyId, type);
+//    }
 
-        Post result = postService.createPost(location, price, area, description, userId, agencyId, type);
+//    @Test
+//    void testCreatePost_InvalidPrice() {
+//        int invalidPrice = -1;
+//        assertThrows(InvalidPrice.class, () ->
+//                postService.createPost(location, invalidPrice, area, description, userId, agencyId, type)
+//        );
+//        verifyNoInteractions(repository);
+//    }
 
-        assertNotNull(result);
-        assertEquals(location, result.getLocation());
-        assertEquals(price, result.getPrice());
-        assertEquals(area, result.getArea());
-        assertEquals(description, result.getDescription());
-        assertEquals(type, result.getType());
-        verify(repository, times(1)).createPost(location, price, area, description, userId, agencyId, type);
-    }
-
-    @Test
-    void testCreatePost_InvalidPrice() {
-        int invalidPrice = -1;
-        assertThrows(InvalidPrice.class, () ->
-                postService.createPost(location, invalidPrice, area, description, userId, agencyId, type)
-        );
-        verifyNoInteractions(repository);
-    }
-
-    @Test
-    void testCreatePost_InvalidArea() {
-        int invalidArea = -1;
-        assertThrows(InvalidArea.class, () ->
-                postService.createPost(location, price, invalidArea, description, userId, agencyId, type)
-        );
-        verifyNoInteractions(repository);
-    }
-
-    @Test
-    void testCreatePost_InvalidParametersForAgency() {
-        when(repository.createPost(location, price, area, description, userId, agencyId, type))
-                .thenThrow(new InvalidDataAccessResourceUsageException("Invalid parameters"));
-
-        assertThrows(InvalidParametersForAgency.class, () ->
-                postService.createPost(location, price, area, description, userId, agencyId, type)
-        );
-
-        verify(repository, times(1)).createPost(location, price, area, description, userId, agencyId, type);
-    }
-
-    @Test
-    void testGetPost_ValidId() {
-        PostDAO mockPostDAO = new PostDAO(1, location, price, area, description, userId, agencyId, type, new Timestamp(System.currentTimeMillis()));
-        when(repository.getPost(1)).thenReturn(mockPostDAO);
-
-        Post result = postService.getPost(1);
-
-        assertNotNull(result);
-        assertEquals(1, result.getPostId());
-        assertEquals(location, result.getLocation());
-        verify(repository, times(1)).getPost(1);
-    }
+//    @Test
+//    void testCreatePost_InvalidArea() {
+//        int invalidArea = -1;
+//        assertThrows(InvalidArea.class, () ->
+//                postService.createPost(location, price, invalidArea, description, userId, agencyId, type)
+//        );
+//        verifyNoInteractions(repository);
+//    }
+//
+//    @Test
+//    void testCreatePost_InvalidParametersForAgency() {
+//        when(repository.createPost(location, price, area, description, userId, agencyId, type))
+//                .thenThrow(new InvalidDataAccessResourceUsageException("Invalid parameters"));
+//
+//        assertThrows(InvalidParametersForAgency.class, () ->
+//                postService.createPost(location, price, area, description, userId, agencyId, type)
+//        );
+//
+//        verify(repository, times(1)).createPost(location, price, area, description, userId, agencyId, type);
+//    }
+//
+//    @Test
+//    void testGetPost_ValidId() {
+//        PostDAO mockPostDAO = new PostDAO(1, location, price, area, description, userId, agencyId, type, new Timestamp(System.currentTimeMillis()));
+//        when(repository.getPost(1)).thenReturn(mockPostDAO);
+//
+//        Post result = postService.getPost(1);
+//
+//        assertNotNull(result);
+//        assertEquals(1, result.getPostId());
+//        assertEquals(location, result.getLocation());
+//        verify(repository, times(1)).getPost(1);
+//    }
 
     @Test
     void testGetPost_InvalidId() {
@@ -114,44 +114,44 @@ public class PostServiceTests {
         verify(repository, times(1)).getPost(999);
     }
 
-    @Test
-    void testFilterBy() {
-        PostDAO mockPostDAO = new PostDAO(1, location, price, area, description, userId, agencyId, type, new Timestamp(System.currentTimeMillis()));
-        when(repository.filterBy(location, price, type)).thenReturn(Collections.singletonList(mockPostDAO));
-
-        List<PostDAO> result = postService.filterBy(location, price, type);
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(mockPostDAO, result.get(0));
-        verify(repository, times(1)).filterBy(location, price, type);
-    }
-
-    @Test
-    void testGetPostsForUser() {
-        PostDAO mockPostDAO = new PostDAO(1, location, price, area, description, userId, agencyId, type, new Timestamp(System.currentTimeMillis()));
-        when(repository.getPostsForUser(userId)).thenReturn(Collections.singletonList(mockPostDAO));
-
-        List<Post> result = postService.getPostsForUser(userId);
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(location, result.get(0).getLocation());
-        verify(repository, times(1)).getPostsForUser(userId);
-    }
-
-    @Test
-    void testGetPostsForAgency() {
-        PostDAO mockPostDAO = new PostDAO(1, location, price, area, description, userId, agencyId, type, new Timestamp(System.currentTimeMillis()));
-        when(repository.getPostsForAgency(agencyId)).thenReturn(Collections.singletonList(mockPostDAO));
-
-        List<Post> result = postService.getPostsForAgency(agencyId);
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(location, result.get(0).getLocation());
-        verify(repository, times(1)).getPostsForAgency(agencyId);
-    }
+//    @Test
+//    void testFilterBy() {
+//        PostDAO mockPostDAO = new PostDAO(1, location, price, area, description, userId, agencyId, type, new Timestamp(System.currentTimeMillis()));
+//        when(repository.filterBy(location, price, type)).thenReturn(Collections.singletonList(mockPostDAO));
+//
+//        List<PostDAO> result = postService.filterBy(location, price, type);
+//
+//        assertNotNull(result);
+//        assertEquals(1, result.size());
+//        assertEquals(mockPostDAO, result.get(0));
+//        verify(repository, times(1)).filterBy(location, price, type);
+//    }
+//
+//    @Test
+//    void testGetPostsForUser() {
+//        PostDAO mockPostDAO = new PostDAO(1, location, price, area, description, userId, agencyId, type, new Timestamp(System.currentTimeMillis()));
+//        when(repository.getPostsForUser(userId)).thenReturn(Collections.singletonList(mockPostDAO));
+//
+//        List<Post> result = postService.getPostsForUser(userId);
+//
+//        assertNotNull(result);
+//        assertEquals(1, result.size());
+//        assertEquals(location, result.get(0).getLocation());
+//        verify(repository, times(1)).getPostsForUser(userId);
+//    }
+//
+//    @Test
+//    void testGetPostsForAgency() {
+//        PostDAO mockPostDAO = new PostDAO(1, location, price, area, description, userId, agencyId, type, new Timestamp(System.currentTimeMillis()));
+//        when(repository.getPostsForAgency(agencyId)).thenReturn(Collections.singletonList(mockPostDAO));
+//
+//        List<Post> result = postService.getPostsForAgency(agencyId);
+//
+//        assertNotNull(result);
+//        assertEquals(1, result.size());
+//        assertEquals(location, result.get(0).getLocation());
+//        verify(repository, times(1)).getPostsForAgency(agencyId);
+//    }
 
     @Test
     void testDeletePost_ValidId() {

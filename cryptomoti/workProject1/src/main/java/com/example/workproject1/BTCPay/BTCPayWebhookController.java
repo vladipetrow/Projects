@@ -23,7 +23,7 @@ public class BTCPayWebhookController {
 
     private final SubscriptionService subscriptionService;
     private static final Logger log = LoggerFactory.getLogger(BTCPayWebhookController.class);
-    @Value("&{webHookSecret}")
+    @Value("${webHookSecret}")
     private static String SECRET;
 
     public BTCPayWebhookController(SubscriptionService subscriptionService) {

@@ -141,8 +141,8 @@ public class MySQLSubscriptionRepository implements SubscriptionRepository {
     private UserDAO fromResultSetUser(ResultSet rs) throws SQLException {
         return new UserDAO(
                 rs.getInt("id"),
-                rs.getString("first_name"),
-                rs.getString("last_name"),
+                rs.getString("firstName"),
+                rs.getString("lastName"),
                 rs.getString("email")
         );
     }

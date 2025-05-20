@@ -9,6 +9,7 @@ import com.example.workproject1.security.JwtUtil;
 import com.example.workproject1.web.api.models.PostInput;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,8 @@ public class PostController {
     }
 
     @PostMapping("/add")
-    public Post createPost(@RequestBody PostInput postInput,  @CookieValue("Authorization") String token) {
+    public Post createPost(@RequestBody PostInput postInput,  @CookieValue("Authorization") String token,
+                           @RequestParam("images") List<MultipartFile> images) {
         int userId = 0;
         int agencyId = 0;
 
@@ -46,7 +48,8 @@ public class PostController {
                 postInput.getDescription(),
                 userId,
                 agencyId,
-                postInput.getType()
+                postInput.getType(),
+                images
         );
     }
 
@@ -76,11 +79,11 @@ public class PostController {
         return postService.getPost(id);
     }
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deletePost(@PathVariable int id) {
-        postService.deletePost(id);
-        return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
-    }
+//    @DeleteMapping("/delete/{id}")
+//    public ResponseEntity<?> deletePost(@PathVariable int id) {
+//        postService.deletePost(id);
+//        return ResponseEntity.ok(Map.of("message", "Post deleted successfully"));
+//    }
 
 }
 

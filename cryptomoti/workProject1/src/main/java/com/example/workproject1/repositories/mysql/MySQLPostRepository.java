@@ -25,7 +25,8 @@ public class MySQLPostRepository implements PostRepository {
     }
 
     public PostDAO createPost(
-            String location, int price, int area, String description, int user_id, int agency_id, ApartmentType type) {
+            String location, int price, int area, String description, int user_id, int agency_id,
+            ApartmentType type, List<String> imageUrls) {
         return txTemplate.execute(status -> {
             KeyHolder keyHolder = new GeneratedKeyHolder();
             if( user_id != 0) {
@@ -56,8 +57,10 @@ public class MySQLPostRepository implements PostRepository {
                 }, keyHolder);
             }
 
-            Integer id = Objects.requireNonNull(keyHolder.getKey()).intValue();
-            return new PostDAO(id, location, price, area, description, user_id, agency_id, type, null);
+            int postId = Objects.requireNonNull(keyHolder.getKey()).intValue();
+
+            addImagesToPost(postId, imageUrls);
+            return new PostDAO(postId, location, price, area, description, user_id, agency_id, type, null, imageUrls);
         });
     }
 
@@ -99,9 +102,22 @@ public class MySQLPostRepository implements PostRepository {
         });
     }
 
+    public void addImagesToPost(int postId, List<String> imageUrls) {
+        for (String imageUrl : imageUrls) {
+            jdbc.update(INSERT_IMAGE, postId, imageUrl);
+        }
+    }
+
+    private List<String> getImagesForPost(int postId) {
+        return jdbc.query(GET_IMAGES, (rs, rowNum) -> rs.getString("image_url"), postId);
+    }
+
     private PostDAO fromResultSet(ResultSet rs) throws SQLException {
+        int postId = rs.getInt("post_id");
+        List<String> imageUrls = getImagesForPost(postId);
+
         return new PostDAO(
-                rs.getInt("post_id"),
+                postId,
                 rs.getString("location"),
                 rs.getInt("price"),
                 rs.getInt("area"),
@@ -109,7 +125,8 @@ public class MySQLPostRepository implements PostRepository {
                 rs.getInt("user_id"),
                 rs.getInt("agency_id"),
                 ApartmentType.valueOf(rs.getString("name_type")),
-                rs.getTimestamp("post_date")
+                rs.getTimestamp("post_date"),
+                imageUrls
         );
     }
 
@@ -120,7 +137,12 @@ public class MySQLPostRepository implements PostRepository {
     static class Queries {
 
         public static final String INSERT_POST =
-                "INSERT INTO Post (location, price, area, description, user_id , agency_id, type_of_apart_id)  VALUES (?, ?, ?, ?, ?, ?, (select id from type_of_apart where name_type = ?))";
+                "INSERT INTO Post (location, price, area, description, user_id , agency_id, type_of_apart_id)  " +
+                        "VALUES (?, ?, ?, ?, ?, ?, (select id from type_of_apart where name_type = ?))";
+
+        public static final String INSERT_IMAGE = "INSERT INTO post_images (post_id, image_url) VALUES (?, ?)";
+
+        public static final String GET_IMAGES = "SELECT image_url FROM post_images WHERE post_id = ?";
 
         public static String filterPostBy(String location, int price, ApartmentType type) {
             return  "SELECT \n" +

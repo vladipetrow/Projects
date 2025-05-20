@@ -11,6 +11,8 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,11 +21,11 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+@Component
 public class MailgunService {
     private static final String DOMAIN = "sandbox5ecb525ad76f413da37987ee9792bec2.mailgun.org";
 
-    @Value("${mailgunApiKey}")
-    private static String apiKey;
+    private static String apiKey = "xxx";
     public static void sendMail(String subject, String body, String recipients) {
         try {
             List<NameValuePair> form = new ArrayList<>();

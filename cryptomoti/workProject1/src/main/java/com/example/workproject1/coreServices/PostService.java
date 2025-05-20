@@ -7,6 +7,7 @@ import com.example.workproject1.repositories.PostRepository;
 import com.example.workproject1.repositories.models.PostDAO;
 import com.example.workproject1.web.WebExeptions.SubscriptionExpired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -15,24 +16,26 @@ import java.util.stream.Collectors;
 public class PostService {
     private final PostRepository repository;
     private final SubscriptionService subscriptionService;
+    private final CloudinaryService cloudinaryService;
 
-    public PostService(PostRepository repository, SubscriptionService subscriptionService) {
+    public PostService(PostRepository repository, SubscriptionService subscriptionService, CloudinaryService cloudinaryService) {
         this.repository = repository;
         this.subscriptionService = subscriptionService;
+        this.cloudinaryService = cloudinaryService;
     }
 
-    public Post createPost(String location, int price, int area,
-                           String description, int user_id, int agency_id, ApartmentType type) {
-        if (price < 0) {
-            throw new InvalidPrice();
-        }
-        if (area < 0) {
-            throw new InvalidArea();
-        }
+    public Post createPost(String location, int price, int area, String description,
+                           int userId, int agencyId, ApartmentType type, List<MultipartFile> images) {
+        if (price < 0) throw new InvalidPrice();
+        if (area < 0) throw new InvalidArea();
 
         try {
-            return Mappers.fromPostDAO(
-                    repository.createPost(location, price, area, description, user_id, agency_id, type));
+            // Upload images to Cloudinary and get URLs
+            List<String> imageUrls = getImageUrls(images);
+
+            PostDAO postDAO = repository.createPost(location, price, area, description, userId, agencyId, type, imageUrls);
+
+            return Mappers.fromPostDAO(postDAO);
         } catch (DataAccessException e) {
             throw new InvalidParametersForAgency();
         }
@@ -42,6 +45,11 @@ public class PostService {
         return repository.filterBy(location, price, type);
     }
 
+    public List<String> getImageUrls(List<MultipartFile> images) {
+        return images.stream()
+                .map(cloudinaryService::uploadImage)
+                .collect(Collectors.toList());
+    }
 
     public Post getPost(int id) {
         try {
@@ -108,11 +116,16 @@ public class PostService {
         return repository.getNumberOfPostsForAgency(user_id);
     }
 
-    public void deletePost(int id) {
-        try {
-            repository.deletePost(id);
-        } catch (DataAccessException e) {
-            throw new InvalidPostId();
-        }
-    }
+//    public void deletePost(int id) {
+//        try {
+//            // ✅ Delete images from Cloudinary
+//            List<String> imageUrls = repository.get(id);
+//            imageUrls.forEach(cloudinaryService::deleteImage);
+//
+//            // ✅ Delete post from database
+//            repository.deletePost(id);
+//        } catch (DataAccessException e) {
+//            throw new InvalidPostId();
+//        }
+//    }
 }
