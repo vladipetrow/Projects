@@ -134,12 +134,11 @@ java Main
 
 ## 📞 Contact
 
-**Vladimir Petrov**  
-Full-Stack Developer
+**Vladislav Petrov**  
+Software engeneer
 
-- **GitHub**: [@vladipetrow](https://github.com/vladipetrow)
-- **Email**: [Your Email]
-- **LinkedIn**: [Your LinkedIn Profile]
+- **Email**: [vladislav.petrow01@gmail.com]
+- **LinkedIn**: [linkedin.com/in/vladislav-petrov]
 
 ---
 
