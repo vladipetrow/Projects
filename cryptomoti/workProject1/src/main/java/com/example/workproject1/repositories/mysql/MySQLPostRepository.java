@@ -282,12 +282,12 @@ public class MySQLPostRepository implements PostRepository {
         
         Map<Integer, List<String>> imagesMap = new HashMap<>();
         
-        jdbc.query(query, postIds.toArray(), (rs, rowNum) -> {
+        jdbc.query(query, (rs, rowNum) -> {
             int postId = rs.getInt("post_id");
             String imageUrl = rs.getString("image_url");
             imagesMap.computeIfAbsent(postId, k -> new ArrayList<>()).add(imageUrl);
             return null;
-        });
+        }, postIds.toArray());
         
         return imagesMap;
     }

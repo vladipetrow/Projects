@@ -24,27 +24,6 @@ The platform features two user types with different posting limits:
 
 **Future Vision**: Enable tenants to pay rent directly with cryptocurrencies, creating a fully crypto-based real estate ecosystem.
 
-## 🚀 Quick Start
-
-### Prerequisites
-- Java 17+, Node.js 16+, MySQL 8.0+
-
-### Backend
-```bash
-cd cryptomoti/workProject1
-# Configure database in application.properties
-./gradlew bootRun
-# Runs on http://localhost:8080
-```
-
-### Frontend
-```bash
-cd imot4e-fe
-npm install --force
-npm start
-# Runs on http://localhost:3000
-```
-
 ## ✨ Key Features
 
 ### 🏠 Property Management
@@ -88,29 +67,25 @@ npm start
 **Caching:** Redis with atomic operations and smart invalidation  
 **Performance:** Debounced search, lazy loading, memoized components
 
-## 📁 Project Structure
+## 🚀 Quick Start
 
+### Prerequisites
+- Java 17+, Node.js 16+, MySQL 8.0+
+
+### Backend
+```bash
+cd cryptomoti/workProject1
+# Configure database in application.properties
+./gradlew bootRun
+# Runs on http://localhost:8080
 ```
-cryptomoti/
-├── workProject1/                    # Spring Boot Backend
-│   ├── coreServices/               # Business logic & caching
-│   │   ├── models/                 # Data models
-│   │   ├── ServiceExeptions/       # Custom exceptions
-│   │   ├── EmailCacheService.java  # Redis email caching
-│   │   ├── PostCacheService.java   # Redis post caching
-│   │   └── RedisKeyTracker.java    # Cache key management
-│   ├── repositories/               # Data access layer
-│   │   └── mysql/                  # MySQL implementations
-│   ├── web/api/                    # REST controllers
-│   ├── security/                   # JWT & authentication
-│   └── config/                     # Redis configuration
-└── imot4e-fe/                      # React Frontend
-    ├── src/ads/                    # Property components
-    ├── src/auth/                   # Authentication
-    ├── src/components/             # Reusable components
-    ├── src/hooks/                  # Custom React hooks
-    ├── src/contexts/               # React contexts
-    └── src/config/                 # API configuration
+
+### Frontend
+```bash
+cd imot4e-fe
+npm install --force
+npm start
+# Runs on http://localhost:3000
 ```
 
 ## ⚙️ Configuration
@@ -149,13 +124,5 @@ MAILGUN_API_KEY=your_api_key
 MAILGUN_FROM_EMAIL=your_email@domain.com
 ```
 
-## 🚀 Production
-
-1. Generate new peppers using `PepperGenerator`
-2. Use environment variables for sensitive data
-3. Configure production database
-4. Deploy with proper secret management
-
----
 
 **Built with ❤️ using Spring Boot and React**
