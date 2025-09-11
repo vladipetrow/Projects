@@ -8,9 +8,11 @@ public class Subscription {
     private int userId;
     private int agencyId;
     private Timestamp expirationDate;
-    private String btcStatus; // e.g., "PENDING", "ACTIVE", "EXPIRED"
-    private String invoiceId;
+    private String paymentStatus; // e.g., "PENDING", "ACTIVE", "EXPIRED"
+    private String chargeId; // Coinbase charge ID or BTCPay invoice ID
+    private String checkoutUrl; // Coinbase checkout URL
     private double price; // Price for the subscription
+    private String subscriptionTier; // Subscription tier (e.g., "USER_PREMIUM", "AGENCY_PREMIUM_ULTRA")
     private Timestamp createdAt;
     private Timestamp updatedAt;
 
@@ -53,20 +55,28 @@ public class Subscription {
         this.expirationDate = expirationDate;
     }
 
-    public String getBtcStatus() {
-        return btcStatus;
+    public String getPaymentStatus() {
+        return paymentStatus;
     }
 
-    public void setBtcStatus(String btcStatus) {
-        this.btcStatus = btcStatus;
+    public void setPaymentStatus(String paymentStatus) {
+        this.paymentStatus = paymentStatus;
     }
 
-    public String getInvoiceId() {
-        return invoiceId;
+    public String getChargeId() {
+        return chargeId;
     }
 
-    public void setInvoiceId(String invoiceId) {
-        this.invoiceId = invoiceId;
+    public void setChargeId(String chargeId) {
+        this.chargeId = chargeId;
+    }
+
+    public String getCheckoutUrl() {
+        return checkoutUrl;
+    }
+
+    public void setCheckoutUrl(String checkoutUrl) {
+        this.checkoutUrl = checkoutUrl;
     }
 
     public double getPrice() {
@@ -77,6 +87,30 @@ public class Subscription {
         this.price = price;
     }
 
+    public String getSubscriptionTier() {
+        return subscriptionTier;
+    }
+
+    public void setSubscriptionTier(String subscriptionTier) {
+        this.subscriptionTier = subscriptionTier;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     // Overridden Methods
     @Override
     public String toString() {
@@ -85,8 +119,8 @@ public class Subscription {
                 ", userId=" + userId +
                 ", agencyId=" + agencyId +
                 ", expirationDate=" + expirationDate +
-                ", btcStatus='" + btcStatus + '\'' +
-                ", invoiceId='" + invoiceId + '\'' +
+                ", paymentStatus='" + paymentStatus + '\'' +
+                ", chargeId='" + chargeId + '\'' +
                 ", price=" + price +
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
@@ -103,15 +137,15 @@ public class Subscription {
                 Double.compare(that.price, price) == 0 &&
                 id.equals(that.id) &&
                 expirationDate.equals(that.expirationDate) &&
-                btcStatus.equals(that.btcStatus) &&
-                invoiceId.equals(that.invoiceId) &&
+                paymentStatus.equals(that.paymentStatus) &&
+                chargeId.equals(that.chargeId) &&
                 createdAt.equals(that.createdAt) &&
                 updatedAt.equals(that.updatedAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, userId, agencyId, expirationDate, btcStatus, invoiceId, price, createdAt, updatedAt);
+        return Objects.hash(id, userId, agencyId, expirationDate, paymentStatus, chargeId, price, createdAt, updatedAt);
     }
 }
 
