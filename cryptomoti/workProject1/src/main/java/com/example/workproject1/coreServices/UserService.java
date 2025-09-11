@@ -1,63 +1,106 @@
 package com.example.workproject1.coreServices;
 
-import com.example.workproject1.coreServices.ServiceExeptions.InvalidEmail;
-import com.example.workproject1.coreServices.ServiceExeptions.InvalidParametersForUser;
-import com.example.workproject1.coreServices.ServiceExeptions.MinimumLengthOfPasswordIs6;
-import com.example.workproject1.coreServices.ServiceExeptions.UserNotExist;
+import com.example.workproject1.coreServices.ServiceExeptions.EmailAlreadyExistsException;
+import com.example.workproject1.coreServices.ServiceExeptions.InvalidEmailException;
+import com.example.workproject1.coreServices.ServiceExeptions.InvalidPasswordException;
+import com.example.workproject1.coreServices.ServiceExeptions.UserNotFound;
 import com.example.workproject1.coreServices.models.User;
 import com.example.workproject1.repositories.UserRepository;
-import com.example.workproject1.security.PasswordUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 
-import java.util.*;
-import java.util.regex.Pattern;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final UserRepository repository;
-    private static final String PEPPER = "7778fcc9c652f35d5d4463bf1d1c94abcd";
+    private final EmailCacheService emailCacheService;
+    private final MailgunService mailgunService;
+    private final ValidationService validationService;
+    private final PasswordService passwordService;
 
-    private final String regexPattern = "^(?=.{1,64}@)[A-Za-z0-9_-]+(\\.[A-Za-z0-9_-]+)*@"
-            + "[^-][A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*(\\.[A-Za-z]{2,})$";
-    public UserService(UserRepository repository) {
+    public UserService(UserRepository repository, EmailCacheService emailCacheService, MailgunService mailgunService, 
+                      ValidationService validationService, PasswordService passwordService) {
         this.repository = repository;
-    }
-
-    public static boolean patternMatches(String emailAddress, String regexPattern) {
-        return Pattern.compile(regexPattern)
-                .matcher(emailAddress)
-                .matches();
+        this.emailCacheService = emailCacheService;
+        this.mailgunService = mailgunService;
+        this.validationService = validationService;
+        this.passwordService = passwordService;
+        log.info("UserService initialized with MailgunService: {}", mailgunService != null ? "OK" : "NULL");
     }
 
     public void createUser(String firstName, String lastName, String email, String password) {
-        if(!patternMatches(email,regexPattern)){
-            throw new InvalidEmail();
+        log.info("Creating user: {} {} with email: {}", firstName, lastName, email);
+        
+        // Validate inputs
+        validationService.validateNotEmpty(firstName, "First name");
+        validationService.validateNotEmpty(lastName, "Last name");
+        validationService.validateEmail(email);
+        validationService.validatePassword(password);
+        
+        // Check if email already exists in cache
+        if (emailCacheService.isEmailExists(email)) {
+            throw new EmailAlreadyExistsException("Email already exists: " + email);
         }
-        if(password.length() < 6){
-            throw new MinimumLengthOfPasswordIs6();
-        }
-        String salt = UUID.randomUUID().toString();
-        String hash = PasswordUtil.sha256(salt + password + PEPPER);
+        
+        // Hash password
+        PasswordService.PasswordHash passwordHash = passwordService.hashUserPassword(password);
+        log.debug("Generated salt and hash for user: {}", email);
+        
         try {
-            repository.createUser(firstName, lastName, email, hash, salt);
+            repository.createUser(firstName, lastName, email, passwordHash.getHash(), passwordHash.getSalt());
+            log.info("User created successfully: {}", email);
+            
+            // Add email to cache
+            emailCacheService.addUserEmail(email);
+            
+            // Send welcome email
+            sendWelcomeEmailSafely(email, firstName, lastName);
+            
         } catch (DataAccessException e) {
-            throw new InvalidParametersForUser();
+            log.error("DataAccessException creating user {}: {}", email, e.getMessage(), e);
+            
+            // Check if it's a duplicate key error or trigger violation
+            if (e.getMessage() != null && 
+                (e.getMessage().toLowerCase().contains("duplicate") || 
+                 e.getMessage().contains("Email already registered as Agency"))) {
+                log.warn("Duplicate email detected: {}", email);
+                throw new EmailAlreadyExistsException("Email already exists: " + email);
+            }
+            
+            throw new RuntimeException("Failed to create user: " + e.getMessage(), e);
         }
     }
 
     public int authorizeUser(String email, String password) {
         User user = Mappers.fromUserDAO(repository.getUserByEmail(email));
         if (user == null) {
-            throw new UserNotExist();
+            throw new UserNotFound(email);
         }
 
-        String hashedPassword = PasswordUtil.sha256(user.getSalt() + password + PEPPER);
-
-        if (!hashedPassword.equals(user.getPasswordHash())) {
-            throw new UserNotExist();
+        if (!passwordService.verifyUserPassword(password, user.getPasswordHash(), user.getSalt())) {
+            throw new UserNotFound(email);
         }
 
         return user.getId();
+    }
+    
+    private void sendWelcomeEmailSafely(String email, String firstName, String lastName) {
+        try {
+            log.info("MailgunService status: {}", mailgunService != null ? "Available" : "NULL");
+            if (mailgunService == null) {
+                log.error("MailgunService is NULL - cannot send welcome email");
+                return;
+            }
+            log.info("Attempting to send welcome email to: {}", email);
+            mailgunService.sendWelcomeEmail(email, firstName, lastName);
+            log.info("Welcome email sent successfully to: {}", email);
+        } catch (Exception e) {
+            log.error("Failed to send welcome email to {}: {}", email, e.getMessage(), e);
+            // Don't fail user creation if email fails
+        }
     }
 
     public String getEmail(int id) {
