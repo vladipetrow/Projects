@@ -5,7 +5,6 @@ import java.util.Objects;
 
 /**
  * Data Access Object for User entities.
- * Immutable data transfer object with Builder pattern.
  */
 public final class UserDAO {
     private final Integer id;
@@ -113,7 +112,6 @@ public final class UserDAO {
 
     /**
      * Builder pattern for creating UserDAO instances.
-     * Follows Effective Java Item 2 - Builder pattern for many parameters.
      */
     public static class Builder {
         private Integer id;

@@ -74,7 +74,6 @@ public final class PostImageDAO {
 
     /**
      * Builder pattern for creating PostImageDAO instances.
-     * Follows Effective Java Item 2 - Builder pattern for many parameters.
      */
     public static class Builder {
         private Integer id;

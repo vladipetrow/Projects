@@ -5,7 +5,6 @@ import java.util.Objects;
 
 /**
  * Data Access Object for SubscriptionTier.
- * Immutable class following Effective Java principles.
  */
 public final class SubscriptionTierDAO {
     private final int id;

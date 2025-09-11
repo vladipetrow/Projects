@@ -5,7 +5,6 @@ import java.util.Objects;
 
 /**
  * Data Access Object for PostView entities.
- * Immutable data transfer object with Builder pattern.
  */
 public final class PostViewDAO {
     private final Integer id;
@@ -91,7 +90,6 @@ public final class PostViewDAO {
 
     /**
      * Builder pattern for creating PostViewDAO instances.
-     * Follows Effective Java Item 2 - Builder pattern for many parameters.
      */
     public static class Builder {
         private Integer id;

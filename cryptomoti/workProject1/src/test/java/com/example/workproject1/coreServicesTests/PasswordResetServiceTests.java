@@ -48,7 +48,14 @@ public class PasswordResetServiceTests {
 
     @Test
     public void testResetPassword_UserEmail() {
-        UserDAO mockUser = new UserDAO(1, "John", "Doe", VALID_USER_EMAIL, "hashedPassword", USER_SALT);
+        UserDAO mockUser = new UserDAO.Builder()
+                .id(1)
+                .firstName("John")
+                .lastName("Doe")
+                .email(VALID_USER_EMAIL)
+                .passwordHash("hashedPassword")
+                .salt(USER_SALT)
+                .build();
         when(userRepository.getUserByEmail(VALID_USER_EMAIL)).thenReturn(mockUser);
 
         passwordResetService.resetPassword(VALID_USER_EMAIL, NEW_PASSWORD);
@@ -60,7 +67,15 @@ public class PasswordResetServiceTests {
 
     @Test
     public void testResetPassword_AgencyEmail() {
-        AgencyDAO mockAgency = new AgencyDAO(1, "Test Agency", VALID_AGENCY_EMAIL, "hashedPassword", AGENCY_SALT, "1234567890", "Test Address");
+        AgencyDAO mockAgency = new AgencyDAO.Builder()
+                .id(1)
+                .agencyName("Test Agency")
+                .email(VALID_AGENCY_EMAIL)
+                .passwordHash("hashedPassword")
+                .salt(AGENCY_SALT)
+                .phoneNumber("1234567890")
+                .address("Test Address")
+                .build();
         when(agencyRepository.getAgencyByEmail(VALID_AGENCY_EMAIL)).thenReturn(mockAgency);
 
         passwordResetService.resetPassword(VALID_AGENCY_EMAIL, NEW_PASSWORD);

@@ -171,7 +171,6 @@ public final class PostDAO {
 
     /**
      * Builder pattern for creating PostDAO instances.
-     * Follows Effective Java Item 2 - Builder pattern for many parameters.
      */
     public static class Builder {
         private Integer postId;

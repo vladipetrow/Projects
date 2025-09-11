@@ -5,7 +5,6 @@ import java.util.Objects;
 
 /**
  * Data Access Object for Subscription entities.
- * Immutable data transfer object with Builder pattern.
  */
 public final class SubscriptionDAO {
     private final int id;
@@ -143,7 +142,6 @@ public final class SubscriptionDAO {
 
     /**
      * Builder pattern for creating SubscriptionDAO instances.
-     * Follows Effective Java Item 2 - Builder pattern for many parameters.
      */
     public static class Builder {
         private int id;

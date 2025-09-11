@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import com.example.workproject1.coreServices.ServiceExeptions.AgencyNotFound;
-import com.example.workproject1.coreServices.ServiceExeptions.InvalidSubscriptionId;
+import com.example.workproject1.coreServices.ServiceExeptions.InvalidSubscriptionIdException;
 import com.example.workproject1.coreServices.ServiceExeptions.UserNotFound;
 import com.example.workproject1.coreServices.SubscriptionService;
 import com.example.workproject1.coreServices.models.Agency;
@@ -84,7 +84,7 @@ public class SubscriptionServiceTests {
     void testGetSubscriptionById_InvalidId() {
         when(subscriptionRepository.getSubscriptionId(INVALID_SUBSCRIPTION_ID)).thenReturn(null);
 
-        assertThrows(InvalidSubscriptionId.class, () -> subscriptionService.getSubscriptionById(INVALID_SUBSCRIPTION_ID));
+        assertThrows(InvalidSubscriptionIdException.class, () -> subscriptionService.getSubscriptionById(INVALID_SUBSCRIPTION_ID));
         verify(subscriptionRepository, times(1)).getSubscriptionId(INVALID_SUBSCRIPTION_ID);
     }
 
@@ -130,7 +130,15 @@ public class SubscriptionServiceTests {
 
     @Test
     void testListSubscribedAgenciesById_Success() {
-        AgencyDAO agencyDAO = new AgencyDAO(VALID_AGENCY_ID, "Test Agency", "agency@example.com", "hash", "salt", "1234567890", "Address");
+        AgencyDAO agencyDAO = new AgencyDAO.Builder()
+                .id(VALID_AGENCY_ID)
+                .agencyName("Test Agency")
+                .email("agency@example.com")
+                .passwordHash("hash")
+                .salt("salt")
+                .phoneNumber("1234567890")
+                .address("Address")
+                .build();
         when(subscriptionRepository.listSubscribedAgencyByID(VALID_AGENCY_ID)).thenReturn(Collections.singletonList(agencyDAO));
 
         List<Agency> result = subscriptionService.listSubscribedAgenciesById(VALID_AGENCY_ID);
@@ -142,7 +150,14 @@ public class SubscriptionServiceTests {
 
     @Test
     void testListSubscribedUsersById_Success() {
-        UserDAO userDAO = new UserDAO(VALID_USER_ID, "John", "Doe", "user@example.com", "hash", "salt");
+        UserDAO userDAO = new UserDAO.Builder()
+                .id(VALID_USER_ID)
+                .firstName("John")
+                .lastName("Doe")
+                .email("user@example.com")
+                .passwordHash("hash")
+                .salt("salt")
+                .build();
         when(subscriptionRepository.listSubscribedUserByID(VALID_USER_ID)).thenReturn(Collections.singletonList(userDAO));
 
         List<User> result = subscriptionService.listSubscribedUsersById(VALID_USER_ID);
