@@ -20,6 +20,9 @@ const Navbar = () => {
           >
             CryptoMoti
           </Typography>
+          <Button color="inherit" onClick={() => navigate("/ads")} sx={{ mr: 1 }}>
+            Обяви
+          </Button>
           <Button color="inherit" onClick={() => navigate("/login")}>
             Вход
           </Button>

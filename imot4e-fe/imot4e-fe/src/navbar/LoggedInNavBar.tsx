@@ -32,6 +32,22 @@ const LoggedInNavbar = () => {
           >
             CryptoMoti
           </Typography>
+          {/* Обяви Button */}
+          <Button
+            color="inherit"
+            onClick={() => navigate("/ads")}
+            sx={{ mr: 2 }}
+          >
+            Обяви
+          </Button>
+          {/* Моите обяви Button */}
+          <Button
+            color="inherit"
+            onClick={() => navigate("/dashboard")}
+            sx={{ mr: 2 }}
+          >
+            Моите обяви
+          </Button>
           {/* Абонаменти Dropdown */}
           <Button
             aria-controls={open ? "menu-abonamenti" : undefined}
@@ -49,7 +65,7 @@ const LoggedInNavbar = () => {
             open={open}
             onClose={() => setAnchorEl(null)}
           >
-            <MenuItem onClick={() => handleMenuClose("/subscription/agency")}>
+            <MenuItem onClick={() => handleMenuClose("/subscription")}>
               Купи абонамент
             </MenuItem>
           </Menu>
@@ -70,7 +86,7 @@ const LoggedInNavbar = () => {
             Създай обява
           </Button>
           {/* Logout */}
-          <Button color="inherit" onClick={logout}>
+          <Button color="inherit" onClick={() => logout()}>
             Изход
           </Button>
         </Toolbar>

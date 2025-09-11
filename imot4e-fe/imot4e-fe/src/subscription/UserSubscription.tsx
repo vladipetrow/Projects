@@ -1,12 +1,12 @@
 import { Box, Button, Card, CardContent, List, ListItem, ListItemIcon, ListItemText, Typography, Alert } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { useState } from "react";
-import SubscriptionTierSelector from "./SubscriptionTierSelector";
 import { getAuthToken } from "../utils/authUtils";
+import SubscriptionTierSelector from "./SubscriptionTierSelector";
 
-const AgencySubscription = () => {
+const UserSubscription = () => {
     const [isLoading, setIsLoading] = useState(false);
-    const [selectedTier, setSelectedTier] = useState<string>('AGENCY_PREMIUM');
+    const [selectedTier, setSelectedTier] = useState<string>('USER_PREMIUM');
     const [error, setError] = useState<string | null>(null);
 
     const handleTierSelect = (tierName: string) => {
@@ -15,13 +15,13 @@ const AgencySubscription = () => {
     };
 
     const handleSubscribe = async () => {
-        console.log("Agency subscribe button clicked!");
+        console.log("User subscribe button clicked!");
         setIsLoading(true);
         
         // Authentication is handled via cookies, no need to check token here
         
         try {
-            console.log("Making API call to create agency subscription...");
+            console.log("Making API call to create user subscription...");
             const response = await fetch(`http://localhost:8080/subscriptions/subscribe?tier=${selectedTier}`, {
                 method: "POST",
                 headers: {
@@ -34,7 +34,7 @@ const AgencySubscription = () => {
             
             if (response.ok) {
                 const data = await response.json();
-                console.log("Agency subscription created:", data);
+                console.log("User subscription created:", data);
                 
                 // Redirect directly to Coinbase checkout page
                 const url = data.checkoutUrl || `https://commerce.coinbase.com/pay/${data.chargeId}`;
@@ -51,7 +51,7 @@ const AgencySubscription = () => {
                 setError(`Subscription failed: ${errorData.error || 'Unknown error'}`);
             }
         } catch (error) {
-            console.error("Error creating agency subscription:", error);
+            console.error("Error creating user subscription:", error);
             if (error instanceof TypeError && error.message.includes('fetch')) {
                 setError("Cannot connect to server. Please make sure the backend server is running on localhost:8080");
             } else {
@@ -72,7 +72,7 @@ const AgencySubscription = () => {
             )}
             
             <SubscriptionTierSelector
-                userType="AGENCY"
+                userType="USER"
                 onTierSelect={handleTierSelect}
                 selectedTier={selectedTier}
             />
@@ -92,4 +92,4 @@ const AgencySubscription = () => {
     );
 };
 
-export default AgencySubscription;
+export default UserSubscription;

@@ -93,10 +93,10 @@ const AdListing = () => {
                       borderRadius: 1,
                     }}
                   >
-                    <AdCard avatarInitials={"T"} adTitle={"Двустаен апартамент"} dateAdded={"September 14, 2021"} imageUrl="https://images.pexels.com/photos/3288100/pexels-photo-3288100.png?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" adPrice="600лв."/>
-                    <AdCard avatarInitials={"S"} adTitle={"Тристаен апартамент"} dateAdded={"August 12, 2021"} imageUrl="https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" adPrice="550лв."/>
-                    <AdCard avatarInitials={"M"} adTitle={"Двустаен апартамент"} dateAdded={"January 16, 2022"} imageUrl="https://images.pexels.com/photos/87223/pexels-photo-87223.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" adPrice="900лв."/>
-                    <AdCard avatarInitials={"V"} adTitle={"Многостаен апартамент"} dateAdded={"November 29, 2021"} imageUrl="https://images.pexels.com/photos/534151/pexels-photo-534151.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" adPrice="200 000лв."/>
+                    <AdCard postId={1} avatarInitials={"T"} adTitle={"Двустаен апартамент"} dateAdded={"September 14, 2021"} imageUrl="https://images.pexels.com/photos/3288100/pexels-photo-3288100.png?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" adPrice="600лв."/>
+                    <AdCard postId={2} avatarInitials={"S"} adTitle={"Тристаен апартамент"} dateAdded={"August 12, 2021"} imageUrl="https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" adPrice="550лв."/>
+                    <AdCard postId={3} avatarInitials={"M"} adTitle={"Двустаен апартамент"} dateAdded={"January 16, 2022"} imageUrl="https://images.pexels.com/photos/87223/pexels-photo-87223.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" adPrice="900лв."/>
+                    <AdCard postId={4} avatarInitials={"V"} adTitle={"Многостаен апартамент"} dateAdded={"November 29, 2021"} imageUrl="https://images.pexels.com/photos/534151/pexels-photo-534151.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" adPrice="200 000лв."/>
                   </Box>
                 </Box>
               </CardContent>

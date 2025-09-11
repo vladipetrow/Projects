@@ -8,19 +8,36 @@ import {
   TextField,
   Typography,
   Alert,
+  Card,
+  CardMedia,
+  IconButton,
+  Grid,
+  Paper,
+  Select,
+  MenuItem,
+  CircularProgress,
 } from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PostInput, ApartmentType, TransactionType } from "../types";
+import { buildApiUrl, getFileUploadOptions } from "../config/api";
+import { API_CONFIG } from "../config/api";
+import { useToastContext } from "../contexts/ToastContext";
 
 const CreateAd = () => {
   const navigate = useNavigate();
+  const { success: showSuccess, error: showError } = useToastContext();
   const [location, setLocation] = useState("");
   const [price, setPrice] = useState(0);
   const [area, setArea] = useState(0);
   const [description, setDescription] = useState("");
-  const [isForSale, setIsForSale] = useState(true);
+  const [apartmentType, setApartmentType] = useState<ApartmentType>("TWO_BEDROOM");
+  const [transactionType, setTransactionType] = useState<TransactionType>("BUY");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(""); // State for success message
+  const [isLoading, setIsLoading] = useState(false);
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   const validateFields = () => {
     if (!location) return "Местоположението е задължително.";
@@ -31,46 +48,86 @@ const CreateAd = () => {
     return null;
   };
 
-  const handleClick = (e) => {
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files) {
+      const newImages = Array.from(files);
+      const updatedImages = [...images, ...newImages];
+      
+      // Limit to 5 images
+      if (updatedImages.length > 5) {
+        setError("Можете да качите максимум 5 снимки.");
+        return;
+      }
+      
+      setImages(updatedImages);
+      
+      // Create previews
+      const newPreviews = newImages.map(file => URL.createObjectURL(file));
+      setImagePreviews(prev => [...prev, ...newPreviews]);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const updatedImages = images.filter((_, i) => i !== index);
+    const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
+    
+    setImages(updatedImages);
+    setImagePreviews(updatedPreviews);
+  };
+
+  const handleClick = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
+    setIsLoading(true);
 
     const validationError = validateFields();
     if (validationError) {
       setError(validationError);
+      showError(validationError);
+      setIsLoading(false);
       return;
     }
 
-    const post = {
-      location,
-      price,
-      area,
-      description,
-      type: isForSale ? "BUY" : "RENT",
-    };
+    try {
+      const postInput: PostInput = {
+        location,
+        price,
+        area,
+        description,
+        apartmentType,
+        type: transactionType,
+      };
 
-    fetch("http://localhost:8080/posts/add", {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-        "Authorization": localStorage.getItem("Authorization") || "",
-      },
-      body: JSON.stringify(post),
-      credentials: "include",
-    })
-      .then((response) => {
-        if (!response.ok) throw new Error("Failed to create ad");
-        return response.json();
-      })
-      .then(() => {
-        setSuccess("Обявата е създадена успешно!");
-        setTimeout(() => navigate("/"), 2000); // Redirect after 2 seconds
-      })
-      .catch((err) => {
-        console.error(err);
-        setError("Възникна грешка при създаването на обявата. Опитайте отново.");
+      const formData = new FormData();
+      formData.append("postInput", JSON.stringify(postInput));
+      
+      // Add images to form data
+      images.forEach((image) => {
+        formData.append("images", image);
       });
+
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.POSTS_ADD), {
+        method: "POST",
+        body: formData,
+        ...getFileUploadOptions(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to create ad");
+      }
+      
+      showSuccess("Обявата е създадена успешно!");
+      setTimeout(() => navigate("/"), 2000);
+    } catch (err) {
+      console.error(err);
+      const errorMessage = err instanceof Error ? err.message : "Възникна грешка при създаването на обявата. Опитайте отново.";
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -98,7 +155,6 @@ const CreateAd = () => {
           Създай обява
         </Typography>
         {error && <Alert severity="error">{error}</Alert>}
-        {success && <Alert severity="success">{success}</Alert>}
         <Box
           sx={{
             display: "flex",
@@ -110,16 +166,16 @@ const CreateAd = () => {
           }}
         >
           <Button
-            variant={isForSale ? "contained" : "outlined"}
+            variant={transactionType === "BUY" ? "contained" : "outlined"}
             size="large"
-            onClick={() => setIsForSale(true)}
+            onClick={() => setTransactionType("BUY")}
           >
             Продажба
           </Button>
           <Button
-            variant={!isForSale ? "contained" : "outlined"}
+            variant={transactionType === "RENT" ? "contained" : "outlined"}
             size="large"
-            onClick={() => setIsForSale(false)}
+            onClick={() => setTransactionType("RENT")}
           >
             Под наем
           </Button>
@@ -156,8 +212,103 @@ const CreateAd = () => {
           value={area}
           onChange={(e) => setArea(parseInt(e.target.value) || 0)}
         />
-        <Button variant="contained" onClick={handleClick}>
-          Създай обява
+        
+        {/* Apartment Type Selector */}
+        <FormControl fullWidth>
+          <InputLabel id="apartment-type-label">Тип на имота</InputLabel>
+          <Select
+            labelId="apartment-type-label"
+            id="apartment-type"
+            value={apartmentType}
+            label="Тип на имота"
+            onChange={(e) => setApartmentType(e.target.value)}
+          >
+            <MenuItem value="STUDIO">Студио</MenuItem>
+            <MenuItem value="ONE_BEDROOM">Едностаен</MenuItem>
+            <MenuItem value="TWO_BEDROOM">Двустаен</MenuItem>
+            <MenuItem value="THREE_BEDROOM">Тристаен</MenuItem>
+            <MenuItem value="FOUR_BEDROOM">Четиристаен</MenuItem>
+            <MenuItem value="MULTI_BEDROOM">Многостаен</MenuItem>
+            <MenuItem value="HOUSE">Къща</MenuItem>
+            <MenuItem value="PENTHOUSE">Пентхаус</MenuItem>
+          </Select>
+        </FormControl>
+        
+        {/* Image Upload Section */}
+        <Box sx={{ mt: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Снимки ({images.length}/5)
+          </Typography>
+          
+          {/* Upload Button */}
+          <input
+            accept="image/*"
+            style={{ display: 'none' }}
+            id="image-upload"
+            type="file"
+            multiple
+            onChange={handleImageUpload}
+          />
+          <label htmlFor="image-upload">
+            <Button
+              variant="outlined"
+              component="span"
+              startIcon={<AddIcon />}
+              disabled={images.length >= 5}
+              sx={{ mb: 2 }}
+            >
+              Добави снимки
+            </Button>
+          </label>
+          
+          {/* Image Previews */}
+          {imagePreviews.length > 0 && (
+            <Grid container spacing={2} sx={{ mt: 1 }}>
+              {imagePreviews.map((preview, index) => (
+                <Grid item xs={12} sm={6} md={4} key={index}>
+                  <Card sx={{ position: 'relative' }}>
+                    <CardMedia
+                      component="img"
+                      height="140"
+                      image={preview}
+                      alt={`Preview ${index + 1}`}
+                    />
+                    <IconButton
+                      onClick={() => removeImage(index)}
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'rgba(0,0,0,0.7)',
+                        },
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          )}
+        </Box>
+        
+        <Button 
+          variant="contained" 
+          onClick={handleClick} 
+          disabled={isLoading}
+          sx={{ mt: 2 }}
+        >
+          {isLoading ? (
+            <>
+              <CircularProgress size={20} sx={{ mr: 1 }} />
+              Създаване...
+            </>
+          ) : (
+            "Създай обява"
+          )}
         </Button>
       </Box>
     </Box>

@@ -2,37 +2,62 @@ import { Box, Button, TextField, Typography, Alert } from "@mui/material";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { useToastContext } from "../contexts/ToastContext";
+import { buildApiUrl, getDefaultFetchOptions } from "../config/api";
+import { API_CONFIG } from "../config/api";
 
 const Login = () => {
   const [email, setEmail] = useState("");
-  const [passwordHash, setPassword] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState(""); // State to show success message
+  const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
+  const { success: showSuccess, error: showError } = useToastContext();
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
     setError("");
-    setSuccess("");
+    setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/user/login", {
+      // Try user login first
+      let response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER_LOGIN), {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, passwordHash }),
-        credentials: "include",
+        ...getDefaultFetchOptions(),
+        body: JSON.stringify({ email, password }),
       });
 
-      if (!response.ok) throw new Error("Invalid login credentials");
+      let role = "ROLE_USER";
+      
+      // If user login fails, try agency login
+      if (!response.ok) {
+        response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.AGENCY_LOGIN), {
+          method: "POST",
+          ...getDefaultFetchOptions(),
+          body: JSON.stringify({ email, password }),
+        });
+        role = "ROLE_AGENCY";
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Invalid login credentials");
+      }
 
       // Show success message
-      setSuccess("Входът е успешен!");
+      showSuccess("Входът е успешен!");
+      
+      // Update auth state
       login();
-
-      // Redirect to home page after a brief delay
-      setTimeout(() => navigate("/", { replace: true }), 2000);
+      
+      // Redirect to home page
+      navigate("/", { replace: true });
     } catch (err) {
-      setError("Входът не бе успешен. Моля, проверете вашите данни за достъп.");
+      const errorMessage = err instanceof Error ? err.message : "Входът не бе успешен. Моля, проверете вашите данни за достъп.";
+      setError(errorMessage);
+      showError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -66,11 +91,6 @@ const Login = () => {
             {error}
           </Alert>
         )}
-        {success && (
-          <Alert severity="success" sx={{ mb: 2 }}>
-            {success}
-          </Alert>
-        )}
 
         <TextField
           label="Имейл"
@@ -86,7 +106,7 @@ const Login = () => {
           variant="outlined"
           fullWidth
           margin="normal"
-          value={passwordHash}
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
         <Button
@@ -94,8 +114,9 @@ const Login = () => {
           fullWidth
           sx={{ mt: 2 }}
           onClick={handleSubmit}
+          disabled={isLoading}
         >
-          Вход
+          {isLoading ? "Влизане..." : "Вход"}
         </Button>
 
         <Box sx={{ mt: 2, textAlign: "center" }}>
