@@ -1,86 +1,90 @@
 package com.example.workproject1.web.api.models;
 
-import java.util.Objects;
-
+/**
+ * Input model for agency registration and updates.
+ * Simple POJO for JSON deserialization.
+ */
 public class AgencyInput {
-    private String nameOfAgency;
+    private String agencyName;
     private String email;
-    private String passwordHash;
+    private String password;
     private String phoneNumber;
     private String address;
+    private String description;
+    private String website;
 
-    public AgencyInput(String nameOfAgency, String email, String passwordHash, String phoneNumber, String address) {
-        this.nameOfAgency = nameOfAgency;
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.phoneNumber = phoneNumber;
-        this.address = address;
-    }
-
+    // Default constructor for JSON deserialization
     public AgencyInput() {
     }
 
-    public String getNameOfAgency() {
-        return nameOfAgency;
-    }
-
-    public void setName0fAgency(String nameOfAgency) {
-        this.nameOfAgency = nameOfAgency;
+    // Getters
+    public String getAgencyName() {
+        return agencyName;
     }
 
     public String getEmail() {
         return email;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public String getPassword() {
+        return password;
     }
 
     public String getPhoneNumber() {
         return phoneNumber;
     }
 
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
     public String getAddress() {
         return address;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public String getWebsite() {
+        return website;
+    }
+
+    // Setters
+    public void setAgencyName(String agencyName) {
+        this.agencyName = agencyName;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
     }
 
     public void setAddress(String address) {
         this.address = address;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        AgencyInput that = (AgencyInput) o;
-        return Objects.equals(nameOfAgency, that.nameOfAgency) && Objects.equals(email, that.email) && Objects.equals(passwordHash, that.passwordHash) && Objects.equals(phoneNumber, that.phoneNumber) && Objects.equals(address, that.address);
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(nameOfAgency, email, passwordHash, phoneNumber, address);
+    public void setWebsite(String website) {
+        this.website = website;
     }
 
     @Override
     public String toString() {
         return "AgencyInput{" +
-                "name_of_agency='" + nameOfAgency + '\'' +
+                "agencyName='" + agencyName + '\'' +
                 ", email='" + email + '\'' +
-                ", passwordHash='" + passwordHash + '\'' +
-                ", phone_number='" + phoneNumber + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
                 ", address='" + address + '\'' +
+                ", description='" + description + '\'' +
+                ", website='" + website + '\'' +
                 '}';
     }
 }
+

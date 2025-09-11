@@ -1,20 +1,24 @@
 package com.example.workproject1.web.api.models;
 
-import java.sql.Timestamp;
-import java.util.Objects;
+import com.example.workproject1.coreServices.models.SubscriptionStatus;
 
+/**
+ * Input model for subscription creation and updates.
+ * Simple POJO for JSON deserialization.
+ */
 public class SubscriptionInput {
+    private int userId;
+    private int agencyId;
+    private int subscriptionTierId;
+    private SubscriptionStatus status;
+    private String paymentMethod;
+    private String transactionId;
 
-    private final int userId;
-    private final int agencyId;
-    private Timestamp expiration_date;
-
-    public SubscriptionInput(int userId, int agencyId, Timestamp expiration_date) {
-        this.userId = userId;
-        this.agencyId = agencyId;
-        this.expiration_date = expiration_date;
+    // Default constructor for JSON deserialization
+    public SubscriptionInput() {
     }
 
+    // Getters
     public int getUserId() {
         return userId;
     }
@@ -23,33 +27,56 @@ public class SubscriptionInput {
         return agencyId;
     }
 
-    public Timestamp getExpiration_date() {
-        return expiration_date;
+    public int getSubscriptionTierId() {
+        return subscriptionTierId;
     }
 
-    public void setExpiration_date(Timestamp expiration_date) {
-        this.expiration_date = expiration_date;
+    public SubscriptionStatus getStatus() {
+        return status;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SubscriptionInput that = (SubscriptionInput) o;
-        return getUserId() == that.getUserId() && getAgencyId() == that.getAgencyId() && Objects.equals(getExpiration_date(), that.getExpiration_date());
+    public String getPaymentMethod() {
+        return paymentMethod;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(getUserId(), getAgencyId(), getExpiration_date());
+    public String getTransactionId() {
+        return transactionId;
+    }
+
+    // Setters
+    public void setUserId(int userId) {
+        this.userId = userId;
+    }
+
+    public void setAgencyId(int agencyId) {
+        this.agencyId = agencyId;
+    }
+
+    public void setSubscriptionTierId(int subscriptionTierId) {
+        this.subscriptionTierId = subscriptionTierId;
+    }
+
+    public void setStatus(SubscriptionStatus status) {
+        this.status = status;
+    }
+
+    public void setPaymentMethod(String paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
     }
 
     @Override
     public String toString() {
         return "SubscriptionInput{" +
-                "user_id=" + userId +
-                ", agency_id=" + agencyId +
-                ", expiration_date=" + expiration_date +
+                "userId=" + userId +
+                ", agencyId=" + agencyId +
+                ", subscriptionTierId=" + subscriptionTierId +
+                ", status=" + status +
+                ", paymentMethod='" + paymentMethod + '\'' +
+                ", transactionId='" + transactionId + '\'' +
                 '}';
     }
 }

@@ -1,12 +1,15 @@
 package com.example.workproject1.web.api;
 
 import com.example.workproject1.coreServices.AgencyService;
+import com.example.workproject1.coreServices.ServiceExeptions.EmailAlreadyExistsException;
 import com.example.workproject1.coreServices.models.Agency;
 import com.example.workproject1.security.CookieUtil;
 import com.example.workproject1.security.JwtUtil;
 import com.example.workproject1.web.WebExeptions.InvalidPhoneNumberOrEmail;
 import com.example.workproject1.web.api.models.AgencyInput;
 import io.jsonwebtoken.Claims;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -24,6 +27,7 @@ import static com.example.workproject1.AppConstants.REFRESH_TOKEN_VALIDITY_MS;
 @CrossOrigin
 public class AgencyController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AgencyController.class);
     private final AgencyService agencyService;
     private final JwtUtil jwtUtil;
     private final CookieUtil cookieUtil;
@@ -37,7 +41,8 @@ public class AgencyController {
     @PostMapping("agency/login")
     public ResponseEntity<?> login(@RequestBody AgencyInput agency) {
         try {
-            int agencyId = agencyService.authorizeAgency(agency.getEmail(), agency.getPasswordHash());
+            logger.info("Agency login attempt for email: {}", agency.getEmail());
+            int agencyId = agencyService.authorizeAgency(agency.getEmail(), agency.getPassword());
 
             String accessToken = jwtUtil.generateToken(String.valueOf(agencyId), List.of("ROLE_AGENCY"), ACCESS_TOKEN_VALIDITY_MS);
 
@@ -46,11 +51,13 @@ public class AgencyController {
             ResponseCookie accessCookie = cookieUtil.createCookie("Authorization", accessToken, ACCESS_TOKEN_VALIDITY_MS / 1000, true);
             ResponseCookie refreshCookie = cookieUtil.createCookie("RefreshToken", refreshToken, REFRESH_TOKEN_VALIDITY_MS / 1000, true);
 
+            logger.info("Agency login successful for ID: {}", agencyId);
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                     .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
                     .body(Map.of("message", "Login successful"));
         } catch (Exception e) {
+            logger.error("Error during agency login: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid login credentials"));
         }
     }
@@ -93,18 +100,20 @@ public class AgencyController {
     public ResponseEntity<?> registration(@RequestBody AgencyInput registration) {
         try {
             Agency newAgency = agencyService.createAgency(
-                    registration.getNameOfAgency(),
+                    registration.getAgencyName(),
                     registration.getEmail(),
-                    registration.getPasswordHash(),
+                    registration.getPassword(),
                     registration.getPhoneNumber(),
                     registration.getAddress()
             );
 
             return ResponseEntity.ok(Map.of("message", "Registration successful", "agency", newAgency));
+        } catch (EmailAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Email already exists. Please use a different email address."));
         } catch (InvalidPhoneNumberOrEmail e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Invalid phone number or email"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred"));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Registration failed: " + e.getMessage()));
         }
     }
 

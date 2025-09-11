@@ -7,6 +7,8 @@ import com.example.workproject1.coreServices.models.Agency;
 import com.example.workproject1.coreServices.models.Subscription;
 import com.example.workproject1.coreServices.models.User;
 import com.example.workproject1.security.JwtUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,40 +17,59 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Map;
 
+import static com.example.workproject1.AppConstants.*;
+
 @RestController
 @RequestMapping("/subscriptions")
 @CrossOrigin
 public class SubscriptionController {
-
+    
+    private static final Logger log = LoggerFactory.getLogger(SubscriptionController.class);
     private final SubscriptionService subscriptionService;
     private final JwtUtil jwtUtil;
     private final UserService userService;
     private final AgencyService agencyService;
 
-    public SubscriptionController(SubscriptionService subscriptionService, UserService userService, AgencyService agencyService, JwtUtil jwtUtil, UserService userService1, AgencyService agencyService1) {
+    public SubscriptionController(SubscriptionService subscriptionService, UserService userService, AgencyService agencyService, JwtUtil jwtUtil) {
         this.subscriptionService = subscriptionService;
         this.jwtUtil = jwtUtil;
-        this.userService = userService1;
-        this.agencyService = agencyService1;
+        this.userService = userService;
+        this.agencyService = agencyService;
     }
 
     @PostMapping("/subscribe")
-    public ResponseEntity<?> subscribe(@CookieValue(value = "Authorization", required = false) String token) {
+    public ResponseEntity<?> subscribe(@CookieValue(value = "Authorization", required = false) String token,
+                                     @RequestParam(defaultValue = DEFAULT_TIER) String tier) {
+        log.info("Subscription request received for tier: {}", tier);
+        
         try {
             if (token == null) {
+                log.warn("No token provided for subscription request");
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Token missing"));
             }
 
             String role = jwtUtil.getRoleFromToken(token);
             int id = jwtUtil.getIdFromToken(token);
+            log.debug("Role: {}, ID: {}", role, id);
 
-            int userId = "[ROLE_USER]".equals(role) ? id : 0;
-            int agencyId = "[ROLE_AGENCY]".equals(role) ? id : 0;
+            int userId = ROLE_USER.equals(role) ? id : 0;
+            int agencyId = ROLE_AGENCY.equals(role) ? id : 0;
+            log.debug("User ID: {}, Agency ID: {}", userId, agencyId);
 
             String email = userId != 0 ? userService.getEmail(userId) : agencyService.getEmail(agencyId);
-            Subscription subscription = subscriptionService.createSubscription(userId, agencyId, email);
-            return ResponseEntity.ok(subscription);
+            log.debug("Email: {}, Tier: {}", email, tier);
+            
+            Subscription subscription = subscriptionService.createSubscription(userId, agencyId, email, tier);
+            log.info("Subscription created with charge ID: {}", subscription.getChargeId());
+            
+            // Return the subscription with chargeId and checkoutUrl for frontend
+            return ResponseEntity.ok(Map.of(
+                "subscription", subscription,
+                "chargeId", subscription.getChargeId(),
+                "checkoutUrl", subscription.getCheckoutUrl()
+            ));
         } catch (Exception e) {
+            log.error("Error creating subscription: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
     }

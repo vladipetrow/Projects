@@ -1,6 +1,7 @@
 package com.example.workproject1.web.api;
 
 import com.example.workproject1.coreServices.MailgunService;
+import com.example.workproject1.coreServices.ServiceExeptions.EmailAlreadyExistsException;
 import com.example.workproject1.coreServices.UserService;
 import com.example.workproject1.coreServices.models.User;
 import com.example.workproject1.security.CookieUtil;
@@ -38,7 +39,7 @@ public class UserController {
     @PostMapping("user/login")
     public ResponseEntity<?> login(@RequestBody UserInput user) {
         try {
-            int userId = userService.authorizeUser(user.getEmail(), user.getPasswordHash());
+            int userId = userService.authorizeUser(user.getEmail(), user.getPassword());
 
             String accessToken = jwtUtil.generateToken(String.valueOf(userId), List.of("ROLE_USER"), ACCESS_TOKEN_VALIDITY_MS);
             String refreshToken = jwtUtil.generateToken(String.valueOf(userId), List.of("ROLE_USER"), REFRESH_TOKEN_VALIDITY_MS);
@@ -49,7 +50,7 @@ public class UserController {
             return ResponseEntity.ok()
                     .header(HttpHeaders.SET_COOKIE, accessCookie.toString())
                     .header(HttpHeaders.SET_COOKIE, refreshCookie.toString())
-                    .body(Map.of("message", "Login successful"));
+                    .body(Map.of("message", "Login successful", "role", "ROLE_USER"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Invalid login credentials"));
         }
@@ -93,14 +94,13 @@ public class UserController {
     @PostMapping("user/register")
     public ResponseEntity<?> register(@RequestBody UserInput registration) {
         try {
-            userService.createUser(registration.getFirstName(), registration.getLastName(), registration.getEmail(), registration.getPasswordHash());
-
-//            MailgunService.sendMail("Successfull registration!","Welcome to Cryptomoti, your registration is" +
-//                    " succesfull!","vladislav.petrow01@gmail.com");
+            userService.createUser(registration.getFirstName(), registration.getLastName(), registration.getEmail(), registration.getPassword());
 
             return ResponseEntity.ok(Map.of("message", "Registration successful"));
+        } catch (EmailAlreadyExistsException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "Email already exists. Please use a different email address."));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Registration failed"));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "Registration failed: " + e.getMessage()));
         }
     }
 
@@ -128,6 +128,26 @@ public class UserController {
             return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "User deletion failed"));
+        }
+    }
+
+    @GetMapping("auth/check")
+    public ResponseEntity<?> checkAuth(@CookieValue(value = "Authorization", required = false) String token) {
+        try {
+            if (token == null || !jwtUtil.validateToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("authenticated", false));
+            }
+            
+            int userId = jwtUtil.getIdFromToken(token);
+            String role = jwtUtil.getRoleFromToken(token);
+            
+            return ResponseEntity.ok(Map.of(
+                "authenticated", true,
+                "userId", userId,
+                "role", role
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("authenticated", false));
         }
     }
 }

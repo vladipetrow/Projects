@@ -1,28 +1,26 @@
 package com.example.workproject1.web.api.models;
 
 import com.example.workproject1.coreServices.models.ApartmentType;
+import com.example.workproject1.coreServices.models.TransactionType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Objects;
-
+/**
+ * Input model for post creation and updates.
+ * Simple POJO for JSON deserialization.
+ */
 public class PostInput {
-    private final Integer postId;
+    private Integer postId;
     private String location;
     private int price;
     private int area;
     private String description;
-    private ApartmentType type;
+    private ApartmentType apartmentType;
+    private TransactionType transactionType;
     private int userId;
     private int agencyId;
 
-    public PostInput(Integer postId, String location, int price, int area, String description,int userId ,int agencyId, ApartmentType type) {
-        this.postId = postId;
-        this.location = location;
-        this.price = price;
-        this.area = area;
-        this.description = description;
-        this.type = type;
-        this.userId = userId;
-        this.agencyId = agencyId;
+    // Default constructor for JSON deserialization
+    public PostInput() {
     }
 
     public Integer getPostId() {
@@ -33,84 +31,96 @@ public class PostInput {
         return location;
     }
 
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
     public int getPrice() {
         return price;
-    }
-
-    public void setPrice(int price) {
-        this.price = price;
     }
 
     public int getArea() {
         return area;
     }
 
-    public void setArea(int area) {
-        this.area = area;
-    }
-
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public ApartmentType getApartmentType() {
+        return apartmentType;
     }
 
-    public ApartmentType getType() {
-        return type;
-    }
-
-    public void setType(ApartmentType type) {
-        this.type = type;
+    public TransactionType getTransactionType() {
+        return transactionType;
     }
 
     public int getUserId() {
         return userId;
     }
 
-    public void setUserId(int userId) {
-        this.userId = userId;
-    }
-
     public int getAgencyId() {
         return agencyId;
+    }
+
+    // Setters
+    public void setPostId(Integer postId) {
+        this.postId = postId;
+    }
+
+    public void setLocation(String location) {
+        this.location = location;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
+    public void setArea(int area) {
+        this.area = area;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setApartmentType(ApartmentType apartmentType) {
+        this.apartmentType = apartmentType;
+    }
+
+    public void setTransactionType(TransactionType transactionType) {
+        this.transactionType = transactionType;
+    }
+
+    public void setUserId(int userId) {
+        this.userId = userId;
     }
 
     public void setAgencyId(int agencyId) {
         this.agencyId = agencyId;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        PostInput postInput = (PostInput) o;
-        return price == postInput.price && area == postInput.area && userId == postInput.userId
-                && agencyId == postInput.agencyId && Objects.equals(postId, postInput.postId)
-                && Objects.equals(location, postInput.location) && Objects.equals(description, postInput.description) && type == postInput.type;
+    // Setter for 'type' field from frontend (maps to transactionType)
+    @JsonProperty("type")
+    public void setType(String type) {
+        this.transactionType = TransactionType.valueOf(type);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(postId, location, price, area, description, type, userId, agencyId);
+    // Getter for 'type' field (for frontend compatibility)
+    @JsonProperty("type")
+    public String getType() {
+        return transactionType != null ? transactionType.toString() : null;
     }
 
     @Override
     public String toString() {
         return "PostInput{" +
-                "post_id=" + postId +
+                "postId=" + postId +
                 ", location='" + location + '\'' +
                 ", price=" + price +
                 ", area=" + area +
                 ", description='" + description + '\'' +
-                ", type=" + type +
-                ", user_id=" + userId +
-                ", agency_id=" + agencyId +
+                ", apartmentType=" + apartmentType +
+                ", transactionType=" + transactionType +
+                ", userId=" + userId +
+                ", agencyId=" + agencyId +
                 '}';
     }
 }
+
