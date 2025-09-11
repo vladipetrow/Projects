@@ -38,3 +38,12 @@ src/main/resources/application.properties
 
 ### VS Code ###
 .vscode/
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.production
