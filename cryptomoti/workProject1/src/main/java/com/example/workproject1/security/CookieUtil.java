@@ -17,7 +17,7 @@ public class CookieUtil {
      */
     public ResponseCookie createCookie(String name, String value, long maxAge, boolean isSecure) {
         return ResponseCookie.from(name, value)
-                .httpOnly(true)
+                .httpOnly(true) // Keep secure - JavaScript cannot access
                 .secure(isSecure) // Set this to true for HTTPS environments
                 .path("/")
                 .sameSite("Strict")

@@ -12,4 +12,5 @@ public interface AgencyRepository {
     List<AgencyDAO> listAgency(int page, int pageSize);
     void deleteAgency(int id);
     void updatePassword(int userId, String password);
+    List<String> getAllAgencyEmails();
 }

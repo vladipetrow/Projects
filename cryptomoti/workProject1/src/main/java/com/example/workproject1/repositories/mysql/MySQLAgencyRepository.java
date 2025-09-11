@@ -2,7 +2,6 @@ package com.example.workproject1.repositories.mysql;
 
 import com.example.workproject1.repositories.AgencyRepository;
 import com.example.workproject1.repositories.models.AgencyDAO;
-import com.example.workproject1.repositories.models.UserDAO;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -45,7 +44,15 @@ public class MySQLAgencyRepository implements AgencyRepository {
 
             Integer id = Objects.requireNonNull(keyHolder.getKey()).intValue();
 //            jdbc.update(INSERT_USER, keyHolder.getKey(), role);
-            return new AgencyDAO(id, name_of_agency, email, passwordHash, salt, phone_number, address);
+            return new AgencyDAO.Builder()
+                    .id(id)
+                    .agencyName(name_of_agency)
+                    .email(email)
+                    .passwordHash(passwordHash)
+                    .salt(salt)
+                    .phoneNumber(phone_number)
+                    .address(address)
+                    .build();
         });
     }
 
@@ -95,38 +102,43 @@ public class MySQLAgencyRepository implements AgencyRepository {
         jdbc.update("UPDATE agencies SET passwordHash = ? WHERE id = ?", password, agencyId);
     }
 
+    @Override
+    public List<String> getAllAgencyEmails() {
+        return jdbc.queryForList(GET_ALL_AGENCY_EMAILS, String.class);
+    }
+
     private AgencyDAO fromResultSet(ResultSet rs) throws SQLException {
-        return new AgencyDAO(
-                rs.getInt("id"),
-                rs.getString("name_of_agency"),
-                rs.getString("email"),
-                rs.getString("passwordHash"),
-                rs.getString("salt"),
-                rs.getString("phone_number"),
-                rs.getString("address")
-        );
+        return new AgencyDAO.Builder()
+                .id(rs.getInt("id"))
+                .agencyName(rs.getString("name_of_agency"))
+                .email(rs.getString("email"))
+                .passwordHash(rs.getString("passwordHash"))
+                .salt(rs.getString("salt"))
+                .phoneNumber(rs.getString("phone_number"))
+                .address(rs.getString("address"))
+                .build();
     }
     private AgencyDAO fromResultSetListAgency(ResultSet rs) throws SQLException {
-        return new AgencyDAO(
-                rs.getInt("id"),
-                rs.getString("name_of_agency"),
-                rs.getString("email"),
-                rs.getString("phone_number"),
-                rs.getString("address")
-        );
+        return new AgencyDAO.Builder()
+                .id(rs.getInt("id"))
+                .agencyName(rs.getString("name_of_agency"))
+                .email(rs.getString("email"))
+                .phoneNumber(rs.getString("phone_number"))
+                .address(rs.getString("address"))
+                .build();
     }
     static class Queries {
-        public static final String GET_AGENCY_BY_EMAIL = "SELECT * FROM Agency WHERE email = ?";
+        public static final String GET_AGENCY_BY_EMAIL = "SELECT * FROM agency WHERE email = ?";
         public static final String LOGIN_AGENCY = "" +
                 "SELECT \n" +
                 " * " +
                 "  FROM " +
-                "    Agency p\n" +
+                "    agency p\n" +
                 "WHERE p.email = ? AND p.passwordHash = ?";
         public static final String INSERT_AGENCY =
-                "INSERT INTO Agency (name_of_agency, email, passwordHash, salt, phone_number, address) VALUES (?, ?, ?, ?, ?, ?)";
+                "INSERT INTO agency (name_of_agency, email, passwordHash, salt, phone_number, address) VALUES (?, ?, ?, ?, ?, ?)";
         public static final String UPDATE_PASSWORD_BY_EMAIL = "UPDATE users SET passwordHash = ? WHERE email = ?";
-        public static final String GET_EMAIL = "SELECT email FROM Agency WHERE id = ?";
+        public static final String GET_EMAIL = "SELECT email FROM agency WHERE id = ?";
 
         public static final String GET_AGENCY = "" +
                 "SELECT \n" +
@@ -136,7 +148,7 @@ public class MySQLAgencyRepository implements AgencyRepository {
                 "    p.phone_number,\n" +
                 "    p.address \n" +
                 "FROM\n" +
-                "    Agency p \n" +
+                "    agency p \n" +
                 "WHERE p.id = ?";
         public static final String LIST_AGENCY = "" +
                 "SELECT \n" +
@@ -146,9 +158,10 @@ public class MySQLAgencyRepository implements AgencyRepository {
                 "    p.phone_number,\n" +
                 "    p.address \n" +
                 "FROM\n" +
-                "    Agency p \n" +
+                "    agency p \n" +
                 "LIMIT ?, ?";
-        public static final String DELETE_AGENCY = "DELETE FROM Agency WHERE id = ?";
+        public static final String DELETE_AGENCY = "DELETE FROM agency WHERE id = ?";
+        public static final String GET_ALL_AGENCY_EMAILS = "SELECT email FROM agency";
     }
 
 }

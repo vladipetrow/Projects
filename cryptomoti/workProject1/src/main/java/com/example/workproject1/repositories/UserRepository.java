@@ -12,4 +12,5 @@ public interface UserRepository {
     List<UserDAO> listUsers(int page, int pageSize);
     void deleteUser(int id);
     void updatePassword(int userId, String password);
+    List<String> getAllUserEmails();
 }

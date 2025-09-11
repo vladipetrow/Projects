@@ -1,5 +1,6 @@
 package com.example.workproject1.coreServices.models;
 
+import java.sql.Timestamp;
 import java.util.Objects;
 
 public class Agency {
@@ -10,6 +11,8 @@ public class Agency {
     private String salt;
     private String phoneNumber;
     private String address;
+    private Integer agencySubscribed;
+    private Timestamp createdAt;
 
     public Agency(Integer id, String nameOfAgency, String email, String passwordHash, String salt, String phoneNumber, String address) {
         this.id = id;
@@ -19,6 +22,19 @@ public class Agency {
         this.salt = salt;
         this.phoneNumber = phoneNumber;
         this.address = address;
+    }
+
+    public Agency(Integer id, String nameOfAgency, String email, String passwordHash, String salt, String phoneNumber, String address,
+                  Integer agencySubscribed, Timestamp createdAt) {
+        this.id = id;
+        this.nameOfAgency = nameOfAgency;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.salt = salt;
+        this.phoneNumber = phoneNumber;
+        this.address = address;
+        this.agencySubscribed = agencySubscribed;
+        this.createdAt = createdAt;
     }
 
     public Integer getId() {
@@ -69,6 +85,14 @@ public class Agency {
         return address;
     }
 
+    public Integer getAgencySubscribed() {
+        return agencySubscribed;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
     public void setAddress(String address) {
         this.address = address;
     }
@@ -92,11 +116,9 @@ public class Agency {
     public String toString() {
         return "Agency{" +
                 "id=" + id +
-                ", name_of_agency='" + nameOfAgency + '\'' +
+                ", nameOfAgency='" + nameOfAgency + '\'' +
                 ", email='" + email + '\'' +
-                ", passwordHash='" + passwordHash + '\'' +
-                ", salt='" + salt + '\'' +
-                ", phone_number='" + phoneNumber + '\'' +
+                ", phoneNumber='" + phoneNumber + '\'' +
                 ", address='" + address + '\'' +
                 '}';
     }

@@ -2,6 +2,8 @@ package com.example.workproject1.repositories.mysql;
 
 import com.example.workproject1.repositories.UserRepository;
 import com.example.workproject1.repositories.models.UserDAO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -18,8 +20,10 @@ import java.util.Objects;
 import static com.example.workproject1.repositories.mysql.MySQLUserRepository.Queries.*;
 
 public class MySQLUserRepository implements UserRepository {
+    private static final Logger log = LoggerFactory.getLogger(MySQLUserRepository.class);
     private final TransactionTemplate txTemplate;
     private final JdbcTemplate jdbc;
+    
     public MySQLUserRepository(TransactionTemplate txTemplate, JdbcTemplate jdbc) {
         this.txTemplate = txTemplate;
         this.jdbc = jdbc;
@@ -28,24 +32,45 @@ public class MySQLUserRepository implements UserRepository {
     public UserDAO createUser(
             String firstName, String lastName,
             String email, String passwordHash, String salt) {
-        return txTemplate.execute(status -> {
-            KeyHolder keyHolder = new GeneratedKeyHolder();
+        log.info("Creating user with email: {}", email);
+        try {
+            return txTemplate.execute(status -> {
+                KeyHolder keyHolder = new GeneratedKeyHolder();
 
-            jdbc.update(conn -> {
-                PreparedStatement ps = conn.prepareStatement(
-                        INSERT_USER, Statement.RETURN_GENERATED_KEYS);
-                ps.setString(1, firstName);
-                ps.setString(2, lastName);
-                ps.setString(3, email);
-                ps.setString(4, passwordHash);
-                ps.setString(5, salt);
-                return ps;
-            }, keyHolder);
+                log.debug("Executing SQL: {}", INSERT_USER);
+                int rowsAffected = jdbc.update(conn -> {
+                    PreparedStatement ps = conn.prepareStatement(
+                            INSERT_USER, Statement.RETURN_GENERATED_KEYS);
+                    ps.setString(1, firstName);
+                    ps.setString(2, lastName);
+                    ps.setString(3, email);
+                    ps.setString(4, passwordHash);
+                    ps.setString(5, salt);
+                    log.debug("Prepared statement parameters: firstName={}, lastName={}, email={}", 
+                             firstName, lastName, email);
+                    return ps;
+                }, keyHolder);
 
-            Integer id = Objects.requireNonNull(keyHolder.getKey()).intValue();
-//            jdbc.update(INSERT_USER, keyHolder.getKey(), role);
-            return new UserDAO(id, firstName, lastName, email, passwordHash, salt);
-        });
+                log.debug("Rows affected: {}", rowsAffected);
+                if (rowsAffected == 0) {
+                    throw new RuntimeException("Failed to create user - no rows affected");
+                }
+
+                Integer id = Objects.requireNonNull(keyHolder.getKey()).intValue();
+                log.info("User created successfully with ID: {}", id);
+                return new UserDAO.Builder()
+                        .id(id)
+                        .firstName(firstName)
+                        .lastName(lastName)
+                        .email(email)
+                        .passwordHash(passwordHash)
+                        .salt(salt)
+                        .build();
+            });
+        } catch (Exception e) {
+            log.error("Error creating user: {}", e.getMessage(), e);
+            throw new RuntimeException("Error creating user: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -91,23 +116,32 @@ public class MySQLUserRepository implements UserRepository {
         jdbc.update("UPDATE users SET passwordHash = ? WHERE id = ?", password, userId);
     }
 
+    @Override
+    public List<String> getAllUserEmails() {
+        return jdbc.queryForList(GET_ALL_USER_EMAILS, String.class);
+    }
+
     private UserDAO fromResultSet(ResultSet rs) throws SQLException {
-        return new UserDAO(
-                rs.getInt("id"),
-                rs.getString("first_name"),
-                rs.getString("last_name"),
-                rs.getString("email"),
-                rs.getString("passwordHash"),
-                rs.getString("salt")
-        );
+        return new UserDAO.Builder()
+                .id(rs.getInt("id"))
+                .firstName(rs.getString("first_name"))
+                .lastName(rs.getString("last_name"))
+                .email(rs.getString("email"))
+                .passwordHash(rs.getString("passwordHash"))
+                .salt(rs.getString("salt"))
+                .userSubscribed(rs.getObject("user_subscribed", Integer.class))
+                .createdAt(rs.getTimestamp("created_at"))
+                .build();
     }
     private UserDAO fromResultSetListUsers(ResultSet rs) throws SQLException {
-        return new UserDAO(
-                rs.getInt("id"),
-                rs.getString("first_name"),
-                rs.getString("last_name"),
-                rs.getString("email")
-        );
+        return new UserDAO.Builder()
+                .id(rs.getInt("id"))
+                .firstName(rs.getString("first_name"))
+                .lastName(rs.getString("last_name"))
+                .email(rs.getString("email"))
+                .userSubscribed(rs.getObject("user_subscribed", Integer.class))
+                .createdAt(rs.getTimestamp("created_at"))
+                .build();
     }
 
     static class Queries {
@@ -119,7 +153,7 @@ public class MySQLUserRepository implements UserRepository {
                 "    users p\n" +
                 "WHERE p.email = ? AND p.passwordHash = ?";
         public static final String INSERT_USER =
-                "INSERT INTO Users (first_name, last_name, email, passwordHash, salt) VALUES (?, ?, ?, ?, ?)";
+                "INSERT INTO users (first_name, last_name, email, passwordHash, salt) VALUES (?, ?, ?, ?, ?)";
         public static final String GET_EMAIL = "SELECT email FROM users WHERE id = ?";
         public static final String UPDATE_PASSWORD_BY_EMAIL = "UPDATE users SET passwordHash = ? WHERE email = ?";
 
@@ -130,7 +164,10 @@ public class MySQLUserRepository implements UserRepository {
                 "    p.first_name,\n" +
                 "    p.last_name,\n" +
                 "    p.email,\n" +
-                "    p.passwordHash \n" +
+                "    p.passwordHash,\n" +
+                "    p.salt,\n" +
+                "    p.user_subscribed,\n" +
+                "    p.created_at \n" +
                 "FROM\n" +
                 "    users p \n" +
                 "WHERE p.id = ?";
@@ -140,11 +177,15 @@ public class MySQLUserRepository implements UserRepository {
                 "    si.first_name,\n" +
                 "    si.last_name,\n" +
                 "    si.email,\n" +
-                "    si.passwordHash \n" +
+                "    si.passwordHash,\n" +
+                "    si.salt,\n" +
+                "    si.user_subscribed,\n" +
+                "    si.created_at \n" +
                 "FROM\n" +
                 "    users si \n" +
                 "LIMIT ?, ?";
         public static final String DELETE_USERS = "DELETE FROM users WHERE id = ?";
+        public static final String GET_ALL_USER_EMAILS = "SELECT email FROM users";
     }
 
 }

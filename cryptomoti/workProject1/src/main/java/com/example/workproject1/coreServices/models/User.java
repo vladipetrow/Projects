@@ -1,5 +1,6 @@
 package com.example.workproject1.coreServices.models;
 
+import java.sql.Timestamp;
 import java.util.Objects;
 
 public class User {
@@ -9,6 +10,8 @@ public class User {
     private String email;
     private String passwordHash;
     private String salt;
+    private Integer userSubscribed;
+    private Timestamp createdAt;
 
     public User(Integer id, String firstName, String lastName, String email, String passwordHash, String salt) {
         this.id = id;
@@ -17,6 +20,18 @@ public class User {
         this.email = email;
         this.passwordHash = passwordHash;
         this.salt = salt;
+    }
+
+    public User(Integer id, String firstName, String lastName, String email, String passwordHash, String salt, 
+                Integer userSubscribed, Timestamp createdAt) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.passwordHash = passwordHash;
+        this.salt = salt;
+        this.userSubscribed = userSubscribed;
+        this.createdAt = createdAt;
     }
 
     public Integer getId() {
@@ -59,6 +74,14 @@ public class User {
         return salt;
     }
 
+    public Integer getUserSubscribed() {
+        return userSubscribed;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
     public void setSalt(String salt) {
         this.salt = salt;
     }
@@ -85,8 +108,6 @@ public class User {
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
                 ", email='" + email + '\'' +
-                ", passwordHash='" + passwordHash + '\'' +
-                ", salt='" + salt + '\'' +
                 '}';
     }
 }
