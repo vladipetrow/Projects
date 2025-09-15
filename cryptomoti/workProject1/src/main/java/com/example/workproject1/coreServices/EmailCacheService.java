@@ -2,7 +2,9 @@ package com.example.workproject1.coreServices;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -49,56 +51,96 @@ public class EmailCacheService {
      * Add user email to cache
      */
     public void addUserEmail(String email) {
-        String normalizedEmail = email.toLowerCase().trim();
-        
-        redisTemplate.opsForSet().add(USER_EMAILS_KEY, normalizedEmail);
-        redisTemplate.opsForSet().add(ALL_EMAILS_KEY, normalizedEmail);
-        
-        // Set expiration for 30 days
-        redisTemplate.expire(USER_EMAILS_KEY, 30, TimeUnit.DAYS);
-        redisTemplate.expire(ALL_EMAILS_KEY, 30, TimeUnit.DAYS);
-        
-        log.debug("Added user email to cache: {}", normalizedEmail);
+        addEmailToCache(email, USER_EMAILS_KEY, "user");
     }
     
     /**
      * Add agency email to cache
      */
     public void addAgencyEmail(String email) {
+        addEmailToCache(email, AGENCY_EMAILS_KEY, "agency");
+    }
+    
+    /**
+     * Private method to add email to cache with proper TTL management
+     */
+    private void addEmailToCache(String email, String specificKey, String type) {
         String normalizedEmail = email.toLowerCase().trim();
         
-        redisTemplate.opsForSet().add(AGENCY_EMAILS_KEY, normalizedEmail);
-        redisTemplate.opsForSet().add(ALL_EMAILS_KEY, normalizedEmail);
-        
-        // Set expiration for 30 days
-        redisTemplate.expire(AGENCY_EMAILS_KEY, 30, TimeUnit.DAYS);
-        redisTemplate.expire(ALL_EMAILS_KEY, 30, TimeUnit.DAYS);
-        
-        log.debug("Added agency email to cache: {}", normalizedEmail);
+        try {
+            // Check if keys exist before starting transaction
+            boolean specificKeyExists = redisTemplate.hasKey(specificKey);
+            boolean allKeyExists = redisTemplate.hasKey(ALL_EMAILS_KEY);
+            
+            // Use atomic operation to add emails and set TTL only if key doesn't exist
+            redisTemplate.execute(new SessionCallback<Object>() {
+                @Override
+                @SuppressWarnings({"unchecked"})
+                public Object execute(RedisOperations operations) {
+                    operations.multi();
+                    
+                    // Add to both sets
+                    operations.opsForSet().add(specificKey, normalizedEmail);
+                    operations.opsForSet().add(ALL_EMAILS_KEY, normalizedEmail);
+                    
+                    // Set TTL only if the key doesn't exist (first time creation)
+                    if (!specificKeyExists) {
+                        operations.expire(specificKey, 30, TimeUnit.DAYS);
+                    }
+                    if (!allKeyExists) {
+                        operations.expire(ALL_EMAILS_KEY, 30, TimeUnit.DAYS);
+                    }
+                    
+                    return operations.exec();
+                }
+            });
+            
+            log.debug("Added {} email to cache: {}", type, normalizedEmail);
+        } catch (Exception e) {
+            log.error("Failed to add {} email to cache: {}", type, e.getMessage());
+        }
     }
     
     /**
      * Remove user email from cache
      */
     public void removeUserEmail(String email) {
-        String normalizedEmail = email.toLowerCase().trim();
-        
-        redisTemplate.opsForSet().remove(USER_EMAILS_KEY, normalizedEmail);
-        redisTemplate.opsForSet().remove(ALL_EMAILS_KEY, normalizedEmail);
-        
-        log.debug("Removed user email from cache: {}", normalizedEmail);
+        removeEmailFromCache(email, USER_EMAILS_KEY, "user");
     }
     
     /**
      * Remove agency email from cache
      */
     public void removeAgencyEmail(String email) {
+        removeEmailFromCache(email, AGENCY_EMAILS_KEY, "agency");
+    }
+    
+    /**
+     * Private method to remove email from cache
+     */
+    private void removeEmailFromCache(String email, String specificKey, String type) {
         String normalizedEmail = email.toLowerCase().trim();
         
-        redisTemplate.opsForSet().remove(AGENCY_EMAILS_KEY, normalizedEmail);
-        redisTemplate.opsForSet().remove(ALL_EMAILS_KEY, normalizedEmail);
-        
-        log.debug("Removed agency email from cache: {}", normalizedEmail);
+        try {
+            // Use atomic operation to remove emails from both sets
+            redisTemplate.execute(new SessionCallback<Object>() {
+                @Override
+                @SuppressWarnings({"unchecked"})
+                public Object execute(RedisOperations operations) {
+                    operations.multi();
+                    
+                    // Remove from both sets
+                    operations.opsForSet().remove(specificKey, normalizedEmail);
+                    operations.opsForSet().remove(ALL_EMAILS_KEY, normalizedEmail);
+                    
+                    return operations.exec();
+                }
+            });
+            
+            log.debug("Removed {} email from cache: {}", type, normalizedEmail);
+        } catch (Exception e) {
+            log.error("Failed to remove {} email from cache: {}", type, e.getMessage());
+        }
     }
     
     /**

@@ -46,7 +46,7 @@ public class AgencyService {
         PasswordService.PasswordHash passwordHash = passwordService.hashAgencyPassword(password);
         try {
             Agency agency = Mappers.fromAgencyDAO(
-                    repository.createAgency(agencyName, email, passwordHash.getHash(), passwordHash.getSalt(), phoneNumber, address));
+                    repository.createAgency(agencyName, email, passwordHash.hash(), passwordHash.salt(), phoneNumber, address));
             
             // Add email to cache
             emailCacheService.addAgencyEmail(email);
@@ -107,7 +107,17 @@ public class AgencyService {
     }
     public void deleteAgency(int id) {
         try {
-            repository.deleteAgency(id);
+            // Get email before deleting to remove from cache
+            String email = repository.getEmail(id);
+            if (email != null) {
+                repository.deleteAgency(id);
+                // Remove email from cache after successful deletion
+                emailCacheService.removeAgencyEmail(email);
+                log.info("Agency deleted and email removed from cache: {}", email);
+            } else {
+                repository.deleteAgency(id);
+                log.warn("Agency deleted but email not found for cache cleanup: {}", id);
+            }
         } catch (DataAccessException e) {
             throw new InvalidAgencyIdException();
         }

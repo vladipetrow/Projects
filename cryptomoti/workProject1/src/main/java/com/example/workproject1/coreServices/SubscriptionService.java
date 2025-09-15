@@ -17,8 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -70,15 +68,15 @@ public class SubscriptionService {
         
         PaymentDetails paymentDetails = createPaymentDetails(tier, buyerEmail);
         Map<String, Object> chargeResult = coinbaseService.createCharge(
-            paymentDetails.getAmount(),
-            paymentDetails.getCurrency(),
-            paymentDetails.getEmail(),
-            paymentDetails.getName(),
-            paymentDetails.getDescription()
+            paymentDetails.amount(),
+            paymentDetails.currency(),
+            paymentDetails.email(),
+            paymentDetails.name(),
+            paymentDetails.description()
         );
         
         SubscriptionDAO subscriptionDAO = saveOrUpdateSubscription(
-            userId, agencyId, chargeResult, paymentDetails.getAmount(), tierName, hasExistingSubscription
+            userId, agencyId, chargeResult, paymentDetails.amount(), tierName, hasExistingSubscription
         );
         
         return buildSubscriptionResponse(subscriptionDAO, chargeResult);
@@ -328,30 +326,11 @@ public class SubscriptionService {
         }
         return userId > 0 ? DEFAULT_USER_POST_LIMIT : DEFAULT_AGENCY_POST_LIMIT;
     }
-    
+
     /**
-     * Immutable value object for payment details
-     */
-    private static final class PaymentDetails {
-        private final double amount;
-        private final String currency;
-        private final String email;
-        private final String name;
-        private final String description;
-        
-        public PaymentDetails(double amount, String currency, String email, String name, String description) {
-            this.amount = amount;
-            this.currency = currency;
-            this.email = email;
-            this.name = name;
-            this.description = description;
-        }
-        
-        // Getters
-        public double getAmount() { return amount; }
-        public String getCurrency() { return currency; }
-        public String getEmail() { return email; }
-        public String getName() { return name; }
-        public String getDescription() { return description; }
+         * Immutable value object for payment details
+         */
+        private record PaymentDetails(double amount, String currency, String email,
+                                      String name, String description) {
     }
 }

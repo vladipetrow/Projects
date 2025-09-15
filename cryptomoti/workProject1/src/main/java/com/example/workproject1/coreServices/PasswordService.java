@@ -101,25 +101,10 @@ public class PasswordService {
     private String generateSalt() {
         return UUID.randomUUID().toString();
     }
-    
+
     /**
-     * Immutable value object for password hash and salt.
-     */
-    public static final class PasswordHash {
-        private final String hash;
-        private final String salt;
-        
-        public PasswordHash(String hash, String salt) {
-            this.hash = hash;
-            this.salt = salt;
-        }
-        
-        public String getHash() {
-            return hash;
-        }
-        
-        public String getSalt() {
-            return salt;
-        }
+         * Immutable value object for password hash and salt.
+         */
+        public record PasswordHash(String hash, String salt) {
     }
 }

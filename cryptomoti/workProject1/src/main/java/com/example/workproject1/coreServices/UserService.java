@@ -1,8 +1,6 @@
 package com.example.workproject1.coreServices;
 
 import com.example.workproject1.coreServices.ServiceExeptions.EmailAlreadyExistsException;
-import com.example.workproject1.coreServices.ServiceExeptions.InvalidEmailException;
-import com.example.workproject1.coreServices.ServiceExeptions.InvalidPasswordException;
 import com.example.workproject1.coreServices.ServiceExeptions.UserNotFound;
 import com.example.workproject1.coreServices.models.User;
 import com.example.workproject1.repositories.UserRepository;
@@ -50,7 +48,7 @@ public class UserService {
         log.debug("Generated salt and hash for user: {}", email);
         
         try {
-            repository.createUser(firstName, lastName, email, passwordHash.getHash(), passwordHash.getSalt());
+            repository.createUser(firstName, lastName, email, passwordHash.hash(), passwordHash.salt());
             log.info("User created successfully: {}", email);
             
             // Add email to cache
@@ -119,6 +117,16 @@ public class UserService {
     }
 
     public void deleteUser(int id) {
-        repository.deleteUser(id);
+        // Get email before deleting to remove from cache
+        String email = repository.getEmail(id);
+        if (email != null) {
+            repository.deleteUser(id);
+            // Remove email from cache after successful deletion
+            emailCacheService.removeUserEmail(email);
+            log.info("User deleted and email removed from cache: {}", email);
+        } else {
+            repository.deleteUser(id);
+            log.warn("User deleted but email not found for cache cleanup: {}", id);
+        }
     }
 }

@@ -12,7 +12,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -128,9 +127,9 @@ public class MailgunService {
         sendMail(subject, body, recipientEmail);
     }
 
-    private String postMessage(String URL, List<NameValuePair> form) throws Exception {
+    private void postMessage(String URL, List<NameValuePair> form) throws Exception {
         if (form == null || URL == null || URL.trim().isEmpty()) {
-            return "";
+            return;
         }
 
         StringBuilder stringBuilder = new StringBuilder();
@@ -148,37 +147,34 @@ public class MailgunService {
 
             if (statusCode == HttpStatus.SC_OK) {
                 System.out.println("post mailgun messages ok:" + URL);
-                System.out.println("Mailgun Response: " + stringBuilder.toString());
+                System.out.println("Mailgun Response: " + stringBuilder);
             } else {
                 System.out.println("Failed to post mailgun,status=" + statusCode);
-                System.out.println("Response body: " + stringBuilder.toString());
+                System.out.println("Response body: " + stringBuilder);
                 throw new RuntimeException("post failed:" + URL + " Status: " + statusCode + " Response: " + stringBuilder.toString());
             }
-        } catch (Exception e) {
-            throw e;
         } finally {
             if (response != null && response.getEntity() != null) {
-                response.getEntity().consumeContent();
+                response.getEntity().getContent();
             }
         }
-        return stringBuilder.toString();
     }
 
     private String getBody(InputStream inputStream) {
-        String result = "";
+        StringBuilder result = new StringBuilder();
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(
                     inputStream));
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
-                result += inputLine;
-                result += "\n";
+                result.append(inputLine);
+                result.append("\n");
             }
             in.close();
         } catch (IOException ioe) {
             throw new RuntimeException(ioe);
         }
-        return result;
+        return result.toString();
     }
 
     private HttpClient buildHttpClient() {

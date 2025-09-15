@@ -109,9 +109,6 @@ public class PostService {
                 .collect(Collectors.toList());
     }
 
-
-
-
     public List<Post> getPostsForAgency(int id) {
         return mapPostDAOsToPosts(repository.getPostsForAgency(id));
     }
@@ -269,7 +266,7 @@ public class PostService {
             postValidationService.validatePostDeletion(id, postDAO.getUserId());
             
             // Delete images from Cloudinary
-            if (postDAO.getImageUrls() != null && !postDAO.getImageUrls().isEmpty()) {
+            if (!postDAO.getImageUrls().isEmpty()) {
                 log.info("Deleting {} images from Cloudinary for post {}", postDAO.getImageUrls().size(), id);
                 postImageService.deleteImages(postDAO.getImageUrls());
             }

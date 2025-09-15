@@ -78,7 +78,8 @@ public class PostCacheService {
         if (posts == null || posts.isEmpty()) return;
         
         try {
-            objectRedisTemplate.opsForValue().set(cacheKey, posts, POST_LIST_TTL, TimeUnit.MINUTES);
+            // Use atomic operation for consistency with other cache methods
+            keyTracker.trackPostListKeyAtomically(cacheKey, posts, POST_LIST_TTL, TimeUnit.MINUTES);
             log.debug("Cached post list: {} posts", posts.size());
         } catch (Exception e) {
             log.error("Failed to cache post list: {}", e.getMessage());
@@ -108,8 +109,8 @@ public class PostCacheService {
     public void cacheUserPosts(int userId, List<Post> posts) {
         String key = USER_POSTS_KEY + userId;
         try {
-            objectRedisTemplate.opsForValue().set(key, posts, USER_POSTS_TTL, TimeUnit.MINUTES);
-            keyTracker.trackUserPostsKey(key);
+            // Use atomic operation for consistency
+            keyTracker.trackUserPostsKeyAtomically(key, posts, USER_POSTS_TTL, TimeUnit.MINUTES);
             log.debug("Cached {} posts for user {}", posts.size(), userId);
         } catch (Exception e) {
             log.error("Failed to cache user posts: {}", e.getMessage());
@@ -130,8 +131,8 @@ public class PostCacheService {
     public void cacheFilteredPosts(String apartmentType, String transactionType, List<Post> posts) {
         String key = FILTERED_POSTS_KEY + apartmentType + ":" + transactionType;
         try {
-            objectRedisTemplate.opsForValue().set(key, posts, FILTERED_POSTS_TTL, TimeUnit.MINUTES);
-            keyTracker.trackFilteredPostsKey(key);
+            // Use atomic operation for consistency
+            keyTracker.trackFilteredPostsKeyAtomically(key, posts, FILTERED_POSTS_TTL, TimeUnit.MINUTES);
             log.debug("Cached {} filtered posts for {}:{}", posts.size(), apartmentType, transactionType);
         } catch (Exception e) {
             log.error("Failed to cache filtered posts: {}", e.getMessage());
@@ -153,7 +154,7 @@ public class PostCacheService {
         String key = POST_KEY + postId;
         try {
             objectRedisTemplate.delete(key);
-            keyTracker.untrackKey(key);
+            keyTracker.untrackKey(key, CacheCategory.POST);
             log.debug("Invalidated post cache: {}", postId);
         } catch (Exception e) {
             log.error("Failed to invalidate post cache {}: {}", postId, e.getMessage());
@@ -167,7 +168,7 @@ public class PostCacheService {
         String key = USER_POSTS_KEY + userId;
         try {
             objectRedisTemplate.delete(key);
-            keyTracker.untrackKey(key);
+            keyTracker.untrackKey(key, CacheCategory.USER_POSTS);
             log.debug("Invalidated user posts cache: {}", userId);
         } catch (Exception e) {
             log.error("Failed to invalidate user posts cache {}: {}", userId, e.getMessage());
@@ -180,18 +181,8 @@ public class PostCacheService {
     public void invalidateAllPostCaches() {
         try {
             // Get tracked keys instead of using expensive keys() operation
-            Set<String> postKeys = keyTracker.getTrackedPostKeys();
-            Set<String> listKeys = keyTracker.getTrackedPostListKeys();
-            Set<String> userKeys = keyTracker.getTrackedUserPostsKeys();
-            Set<String> filterKeys = keyTracker.getTrackedFilteredPostsKeys();
-            
-            // Combine all keys
-            Set<String> allKeys = new HashSet<>();
-            if (postKeys != null) allKeys.addAll(postKeys);
-            if (listKeys != null) allKeys.addAll(listKeys);
-            if (userKeys != null) allKeys.addAll(userKeys);
-            if (filterKeys != null) allKeys.addAll(filterKeys);
-            
+            Set<String> allKeys = getStringSet();
+
             // Delete all keys at once
             if (!allKeys.isEmpty()) {
                 objectRedisTemplate.delete(allKeys);
@@ -202,7 +193,22 @@ public class PostCacheService {
             log.error("Failed to invalidate all post caches: {}", e.getMessage());
         }
     }
-    
+
+    private Set<String> getStringSet() {
+        Set<String> postKeys = keyTracker.getTrackedPostKeys();
+        Set<String> listKeys = keyTracker.getTrackedPostListKeys();
+        Set<String> userKeys = keyTracker.getTrackedUserPostsKeys();
+        Set<String> filterKeys = keyTracker.getTrackedFilteredPostsKeys();
+
+        // Combine all keys
+        Set<String> allKeys = new HashSet<>();
+        if (postKeys != null) allKeys.addAll(postKeys);
+        if (listKeys != null) allKeys.addAll(listKeys);
+        if (userKeys != null) allKeys.addAll(userKeys);
+        if (filterKeys != null) allKeys.addAll(filterKeys);
+        return allKeys;
+    }
+
     /**
      * Smart invalidation - only invalidate what's actually affected
      */
@@ -218,8 +224,8 @@ public class PostCacheService {
             Set<String> listKeys = keyTracker.getTrackedPostListKeys();
             if (listKeys != null && !listKeys.isEmpty()) {
                 objectRedisTemplate.delete(listKeys);
-                // Clear tracking for deleted keys
-                listKeys.forEach(keyTracker::untrackKey);
+            // Clear tracking for deleted keys
+            listKeys.forEach(key -> keyTracker.untrackKey(key, CacheCategory.POST_LIST));
                 log.info("Invalidated {} post list cache keys", listKeys.size());
             }
             
