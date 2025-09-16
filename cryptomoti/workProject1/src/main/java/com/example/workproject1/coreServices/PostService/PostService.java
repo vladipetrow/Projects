@@ -1,5 +1,6 @@
-package com.example.workproject1.coreServices;
+package com.example.workproject1.coreServices.PostService;
 
+import com.example.workproject1.coreServices.Mappers;
 import com.example.workproject1.coreServices.ServiceExeptions.InvalidPostIdException;
 import com.example.workproject1.coreServices.ServiceExeptions.PostUpdateException;
 import com.example.workproject1.coreServices.ServiceExeptions.PostDeleteException;
@@ -63,6 +64,14 @@ public class PostService {
             
             // Smart invalidation - only invalidate what's affected
             postCacheService.invalidatePostAndRelatedCaches(postDAO.getPostId(), userId);
+            
+            // Invalidate total count as a new post was created
+            postCacheService.invalidateTotalCount();
+            
+            // Also invalidate agency posts if this was created by an agency
+            if (agencyId > 0) {
+                postCacheService.invalidateAgencyPosts(agencyId);
+            }
 
             log.info("Post created successfully with ID: {}", postDAO.getPostId());
             return post;
@@ -110,7 +119,21 @@ public class PostService {
     }
 
     public List<Post> getPostsForAgency(int id) {
-        return mapPostDAOsToPosts(repository.getPostsForAgency(id));
+        log.debug("Getting posts for agency: {}", id);
+        
+        // Try cache first
+        List<Post> cachedPosts = postCacheService.getCachedAgencyPosts(id);
+        if (cachedPosts != null) {
+            return cachedPosts;
+        }
+        
+        // Not in cache, fetch from database
+        List<Post> posts = mapPostDAOsToPosts(repository.getPostsForAgency(id));
+        
+        // Cache the results
+        postCacheService.cacheAgencyPosts(id, posts);
+        
+        return posts;
     }
 
     public List<Post> listPosts(int page, int pageSize) {
@@ -133,15 +156,41 @@ public class PostService {
 
     /**
      * Optimized method to list posts with images.
-     * Uses efficient querying to prevent N+1 query problem.
      */
     public List<Post> listPostsWithImages(int page, int pageSize) {
         log.debug("Fetching posts with images - page: {}, pageSize: {}", page, pageSize);
-        return mapPostDAOsToPosts(repository.listPostsWithImages(page, pageSize));
+        
+        // Try cache first
+        List<Post> cachedPosts = postCacheService.getCachedPostList(page, pageSize);
+        if (cachedPosts != null) {
+            return cachedPosts;
+        }
+        
+        // Not in cache, fetch from database
+        List<Post> posts = mapPostDAOsToPosts(repository.listPostsWithImages(page, pageSize));
+        
+        // Cache the results
+        postCacheService.cachePostList(page, pageSize, posts);
+        
+        return posts;
     }
 
     public int getTotalPostsCount() {
-        return repository.getTotalPostsCount();
+        log.debug("Getting total posts count");
+        
+        // Try cache first
+        Integer cachedCount = postCacheService.getCachedTotalCount();
+        if (cachedCount != null) {
+            return cachedCount;
+        }
+        
+        // Not in cache, fetch from database
+        int count = repository.getTotalPostsCount();
+        
+        // Cache the result
+        postCacheService.cacheTotalCount(count);
+        
+        return count;
     }
 
     public List<Post> getUserPosts(int userId) {
@@ -237,8 +286,23 @@ public class PostService {
             // Update post in database
             repository.updatePost(id, postInput, newImageUrls, imagesToDelete);
             
+            // Write-through caching: refresh cache with updated post
+            PostDAO updatedPost = repository.getPost(id);
+            if (updatedPost != null) {
+                Post post = Mappers.fromPostDAO(updatedPost);
+                postCacheService.cachePost(post);
+            }
+            
             // Smart invalidation - only invalidate what's affected
             postCacheService.invalidatePostAndRelatedCaches(id, existingPost.getUserId());
+            
+            // Invalidate total count as post was updated (might affect count logic)
+            postCacheService.invalidateTotalCount();
+            
+            // Also invalidate agency posts if this was updated by an agency
+            if (existingPost.getAgencyId() > 0) {
+                postCacheService.invalidateAgencyPosts(existingPost.getAgencyId());
+            }
             
             log.info("Post {} updated successfully", id);
             
@@ -263,6 +327,9 @@ public class PostService {
         try {
             // Get post and validate deletion
             PostDAO postDAO = repository.getPost(id);
+            if (postDAO == null) {
+                throw new InvalidPostIdException("Post not found with ID: " + id);
+            }
             postValidationService.validatePostDeletion(id, postDAO.getUserId());
             
             // Delete images from Cloudinary
@@ -276,6 +343,14 @@ public class PostService {
             
             // Smart invalidation - only invalidate what's affected
             postCacheService.invalidatePostAndRelatedCaches(id, postDAO.getUserId());
+            
+            // Invalidate total count as a post was deleted
+            postCacheService.invalidateTotalCount();
+            
+            // Also invalidate agency posts if this was deleted by an agency
+            if (postDAO.getAgencyId() > 0) {
+                postCacheService.invalidateAgencyPosts(postDAO.getAgencyId());
+            }
             
             log.info("Post {} deleted successfully", id);
             

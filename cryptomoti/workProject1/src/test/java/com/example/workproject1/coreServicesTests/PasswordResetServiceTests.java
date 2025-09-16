@@ -1,6 +1,6 @@
 package com.example.workproject1.coreServicesTests;
 
-import com.example.workproject1.coreServices.PasswordResetService;
+import com.example.workproject1.coreServices.PasswordService.PasswordResetService;
 import com.example.workproject1.repositories.AgencyRepository;
 import com.example.workproject1.repositories.UserRepository;
 import com.example.workproject1.repositories.models.AgencyDAO;

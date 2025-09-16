@@ -1,10 +1,15 @@
 package com.example.workproject1.web.beans;
 
 import com.example.workproject1.coreServices.*;
+import com.example.workproject1.coreServices.EmailService.EmailCacheService;
+import com.example.workproject1.coreServices.PasswordService.PasswordService;
+import com.example.workproject1.coreServices.PostService.PostCacheService;
+import com.example.workproject1.coreServices.PostService.PostImageService;
+import com.example.workproject1.coreServices.PostService.PostService;
+import com.example.workproject1.coreServices.PostService.PostValidationService;
 import com.example.workproject1.repositories.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
 
 
 @Configuration

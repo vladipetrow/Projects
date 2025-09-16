@@ -1,6 +1,8 @@
-package com.example.workproject1.coreServices;
+package com.example.workproject1.coreServices.SubscriptionService;
 
 import com.example.workproject1.Coinbase.CoinbaseService;
+import com.example.workproject1.coreServices.MailgunService;
+import com.example.workproject1.coreServices.Mappers;
 import com.example.workproject1.coreServices.ServiceExeptions.AgencyNotFound;
 import com.example.workproject1.coreServices.ServiceExeptions.InvalidSubscriptionIdException;
 import com.example.workproject1.coreServices.ServiceExeptions.UserNotFound;
@@ -26,11 +28,9 @@ import static com.example.workproject1.AppConstants.*;
 
 /**
  * Service for managing subscription operations.
- * Follows Clean Code principles with proper separation of concerns.
  */
 @Service
 public class SubscriptionService {
-
     private static final Logger logger = LoggerFactory.getLogger(SubscriptionService.class);
     
     private final SubscriptionRepository subscriptionRepository;

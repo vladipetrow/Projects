@@ -1,4 +1,4 @@
-package com.example.workproject1.coreServices;
+package com.example.workproject1.coreServices.PasswordService;
 
 import com.example.workproject1.security.PasswordUtil;
 import org.slf4j.Logger;

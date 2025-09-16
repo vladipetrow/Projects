@@ -1,4 +1,4 @@
-package com.example.workproject1.coreServices;
+package com.example.workproject1.coreServices.SubscriptionService;
 
 import com.example.workproject1.coreServices.ServiceExeptions.MaxNumberOfPostsException;
 import com.example.workproject1.coreServices.ServiceExeptions.YouNeedSubscriptionException;

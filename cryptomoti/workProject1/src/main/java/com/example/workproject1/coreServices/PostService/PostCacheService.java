@@ -1,5 +1,7 @@
-package com.example.workproject1.coreServices;
+package com.example.workproject1.coreServices.PostService;
 
+import com.example.workproject1.coreServices.CacheCategory;
+import com.example.workproject1.coreServices.RedisKeyTracker;
 import com.example.workproject1.coreServices.models.Post;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,13 +24,17 @@ public class PostCacheService {
     private static final String POST_KEY = "cryptomoti:posts:";
     private static final String POST_LIST_KEY = "cryptomoti:posts:list:";
     private static final String USER_POSTS_KEY = "cryptomoti:posts:user:";
+    private static final String AGENCY_POSTS_KEY = "cryptomoti:posts:agency:";
     private static final String FILTERED_POSTS_KEY = "cryptomoti:posts:filtered:";
+    private static final String TOTAL_COUNT_KEY = "cryptomoti:posts:total_count";
     
     // Cache TTLs - optimized for performance vs freshness
     private static final long POST_TTL = 6; // 6 hours - posts are invalidated on writes
     private static final long POST_LIST_TTL = 15; // 15 minutes - shorter for lists
     private static final long USER_POSTS_TTL = 10; // 10 minutes - shorter for user lists
+    private static final long AGENCY_POSTS_TTL = 10; // 10 minutes - same as user posts
     private static final long FILTERED_POSTS_TTL = 5; // 5 minutes - shortest for search results
+    private static final long TOTAL_COUNT_TTL = 1; // 1 hour - total count changes less frequently
     
     private final RedisTemplate<String, Object> objectRedisTemplate;
     private final RedisKeyTracker keyTracker;
@@ -72,21 +78,6 @@ public class PostCacheService {
     }
     
     /**
-     * Cache post list
-     */
-    public void cachePostList(List<Post> posts, String cacheKey) {
-        if (posts == null || posts.isEmpty()) return;
-        
-        try {
-            // Use atomic operation for consistency with other cache methods
-            keyTracker.trackPostListKeyAtomically(cacheKey, posts, POST_LIST_TTL, TimeUnit.MINUTES);
-            log.debug("Cached post list: {} posts", posts.size());
-        } catch (Exception e) {
-            log.error("Failed to cache post list: {}", e.getMessage());
-        }
-    }
-    
-    /**
      * Get cached post list
      */
     @SuppressWarnings("unchecked")
@@ -122,6 +113,28 @@ public class PostCacheService {
      */
     public List<Post> getCachedUserPosts(int userId) {
         String key = USER_POSTS_KEY + userId;
+        return getCachedPostList(key);
+    }
+    
+    /**
+     * Cache agency posts
+     */
+    public void cacheAgencyPosts(int agencyId, List<Post> posts) {
+        String key = AGENCY_POSTS_KEY + agencyId;
+        try {
+            // Use atomic operation for consistency
+            keyTracker.trackUserPostsKeyAtomically(key, posts, AGENCY_POSTS_TTL, TimeUnit.MINUTES);
+            log.debug("Cached {} posts for agency {}", posts.size(), agencyId);
+        } catch (Exception e) {
+            log.error("Failed to cache agency posts: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Get cached agency posts
+     */
+    public List<Post> getCachedAgencyPosts(int agencyId) {
+        String key = AGENCY_POSTS_KEY + agencyId;
         return getCachedPostList(key);
     }
     
@@ -176,21 +189,16 @@ public class PostCacheService {
     }
     
     /**
-     * Invalidate all post caches (use sparingly - prefer targeted invalidation)
+     * Invalidate agency posts cache
      */
-    public void invalidateAllPostCaches() {
+    public void invalidateAgencyPosts(int agencyId) {
+        String key = AGENCY_POSTS_KEY + agencyId;
         try {
-            // Get tracked keys instead of using expensive keys() operation
-            Set<String> allKeys = getStringSet();
-
-            // Delete all keys at once
-            if (!allKeys.isEmpty()) {
-                objectRedisTemplate.delete(allKeys);
-                keyTracker.clearAllTracking();
-                log.info("Invalidated {} post cache keys", allKeys.size());
-            }
+            objectRedisTemplate.delete(key);
+            keyTracker.untrackKey(key, CacheCategory.USER_POSTS); // Using USER_POSTS category for now
+            log.debug("Invalidated agency posts cache: {}", agencyId);
         } catch (Exception e) {
-            log.error("Failed to invalidate all post caches: {}", e.getMessage());
+            log.error("Failed to invalidate agency posts cache {}: {}", agencyId, e.getMessage());
         }
     }
 
@@ -267,5 +275,45 @@ public class PostCacheService {
             log.error("Failed to get cached post list: {}", e.getMessage());
         }
         return null;
+    }
+    
+    /**
+     * Cache total posts count
+     */
+    public void cacheTotalCount(int count) {
+        try {
+            objectRedisTemplate.opsForValue().set(TOTAL_COUNT_KEY, count, TOTAL_COUNT_TTL, TimeUnit.HOURS);
+            log.debug("Cached total posts count: {}", count);
+        } catch (Exception e) {
+            log.error("Failed to cache total count: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * Get cached total posts count
+     */
+    public Integer getCachedTotalCount() {
+        try {
+            Object cachedCount = objectRedisTemplate.opsForValue().get(TOTAL_COUNT_KEY);
+            if (cachedCount instanceof Integer) {
+                log.debug("Total posts count found in cache: {}", cachedCount);
+                return (Integer) cachedCount;
+            }
+        } catch (Exception e) {
+            log.error("Failed to get cached total count: {}", e.getMessage());
+        }
+        return null;
+    }
+    
+    /**
+     * Invalidate total count cache
+     */
+    public void invalidateTotalCount() {
+        try {
+            objectRedisTemplate.delete(TOTAL_COUNT_KEY);
+            log.debug("Invalidated total count cache");
+        } catch (Exception e) {
+            log.error("Failed to invalidate total count cache: {}", e.getMessage());
+        }
     }
 }

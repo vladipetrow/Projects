@@ -1,6 +1,6 @@
 package com.example.workproject1.web.api;
 
-import com.example.workproject1.coreServices.SubscriptionTierService;
+import com.example.workproject1.coreServices.SubscriptionService.SubscriptionTierService;
 import com.example.workproject1.coreServices.models.SubscriptionTier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

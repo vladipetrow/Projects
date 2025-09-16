@@ -1,6 +1,6 @@
 package com.example.workproject1.coreServicesTests;
 
-import com.example.workproject1.coreServices.PostService;
+import com.example.workproject1.coreServices.PostService.PostService;
 import com.example.workproject1.coreServices.ServiceExeptions.InvalidPostIdException;
 import com.example.workproject1.coreServices.models.ApartmentType;
 import com.example.workproject1.coreServices.models.TransactionType;

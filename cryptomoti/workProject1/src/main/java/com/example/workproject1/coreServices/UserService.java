@@ -1,5 +1,7 @@
 package com.example.workproject1.coreServices;
 
+import com.example.workproject1.coreServices.EmailService.EmailCacheService;
+import com.example.workproject1.coreServices.PasswordService.PasswordService;
 import com.example.workproject1.coreServices.ServiceExeptions.EmailAlreadyExistsException;
 import com.example.workproject1.coreServices.ServiceExeptions.UserNotFound;
 import com.example.workproject1.coreServices.models.User;

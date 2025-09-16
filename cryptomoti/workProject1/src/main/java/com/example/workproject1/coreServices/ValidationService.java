@@ -10,7 +10,6 @@ import static com.example.workproject1.AppConstants.*;
 
 /**
  * Centralized validation service to eliminate code duplication.
- * Follows Clean Code principles by extracting common validation logic.
  */
 @Service
 public class ValidationService {

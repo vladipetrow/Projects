@@ -1,6 +1,6 @@
 package com.example.workproject1.web.api;
 
-import com.example.workproject1.coreServices.PostService;
+import com.example.workproject1.coreServices.PostService.PostService;
 import com.example.workproject1.coreServices.models.Post;
 import com.example.workproject1.security.JwtUtil;
 import org.slf4j.Logger;

@@ -1,7 +1,7 @@
 package com.example.workproject1.web.api;
 
 import com.example.workproject1.coreServices.AgencyService;
-import com.example.workproject1.coreServices.SubscriptionService;
+import com.example.workproject1.coreServices.SubscriptionService.SubscriptionService;
 import com.example.workproject1.coreServices.UserService;
 import com.example.workproject1.coreServices.models.Agency;
 import com.example.workproject1.coreServices.models.Subscription;

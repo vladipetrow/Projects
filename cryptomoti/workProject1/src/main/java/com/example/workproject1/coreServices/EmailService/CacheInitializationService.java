@@ -1,4 +1,4 @@
-package com.example.workproject1.coreServices;
+package com.example.workproject1.coreServices.EmailService;
 
 import com.example.workproject1.repositories.AgencyRepository;
 import com.example.workproject1.repositories.UserRepository;

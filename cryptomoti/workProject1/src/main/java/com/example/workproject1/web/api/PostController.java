@@ -1,6 +1,7 @@
 package com.example.workproject1.web.api;
 
-import com.example.workproject1.coreServices.PostService;
+import com.example.workproject1.coreServices.Mappers;
+import com.example.workproject1.coreServices.PostService.PostService;
 import com.example.workproject1.coreServices.models.ApartmentType;
 import com.example.workproject1.coreServices.models.Post;
 import com.example.workproject1.coreServices.models.TransactionType;
@@ -153,7 +154,7 @@ public class PostController {
         logger.info("Found {} filtered posts", filteredPosts.size());
         
         return filteredPosts.stream()
-                .map(dao -> com.example.workproject1.coreServices.Mappers.fromPostDAO(dao))
+                .map(Mappers::fromPostDAO)
                 .collect(java.util.stream.Collectors.toList());
     }
     
